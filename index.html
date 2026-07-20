@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FinanceFlow — Smart Money Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   (() => {
     const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
@@ -74,7 +75,6 @@ body {
   line-height: 1.5;
 }
 
-/* Layout */
 .app { display: flex; min-height: 100vh; }
 .sidebar {
   width: 260px;
@@ -128,7 +128,6 @@ body {
 .nav-item.active { background: var(--cp-accent-soft); color: var(--cp-accent); font-weight: 600; }
 .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
 
-/* Cards */
 .card {
   background: var(--cp-surface);
   border: 1px solid var(--cp-border);
@@ -148,17 +147,14 @@ body {
 .card-change.positive { color: var(--cp-success); }
 .card-change.negative { color: var(--cp-danger); }
 
-/* Grid layouts */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 28px; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
 .full-width { margin-bottom: 28px; }
 
-/* Page header */
 .page-header { margin-bottom: 28px; }
 .page-header h1 { font-size: 1.5rem; font-weight: 700; }
 .page-header p { color: var(--cp-text-muted); font-size: 0.875rem; margin-top: 4px; }
 
-/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -182,7 +178,6 @@ body {
 .btn-primary:hover { background: var(--cp-accent-hover); }
 .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
 
-/* Progress bars */
 .progress-bar {
   width: 100%;
   height: 8px;
@@ -196,7 +191,6 @@ body {
   transition: width 0.5s ease;
 }
 
-/* Tables */
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
 th { text-align: left; padding: 10px 12px; color: var(--cp-text-muted); font-weight: 600; border-bottom: 1px solid var(--cp-border); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -204,7 +198,45 @@ td { padding: 12px; border-bottom: 1px solid var(--cp-border); }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--cp-accent-soft); }
 
-/* Sync Status */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+.badge-income { background: rgba(22,163,74,0.1); color: var(--cp-success); }
+.badge-expense { background: rgba(220,38,38,0.1); color: var(--cp-danger); }
+
+.page { display: none; }
+.page.active { display: block; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--cp-border); border-radius: 3px; }
+
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding: 20px; }
+  .two-col { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .mobile-toggle { display: flex !important; }
+}
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 200;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  padding: 8px;
+  cursor: pointer;
+}
+
 .sync-status {
   display: flex;
   align-items: center;
@@ -214,11 +246,64 @@ tr:hover td { background: var(--cp-accent-soft); }
   border-radius: 0.625rem;
   background: var(--cp-accent-soft);
   color: var(--cp-accent);
+  margin-bottom: 12px;
+  justify-content: center;
 }
 .sync-status.synced { background: rgba(22,163,74,0.1); color: var(--cp-success); }
 .sync-status.syncing { animation: pulse 1.5s infinite; }
 .sync-status.error { background: rgba(220,38,38,0.1); color: var(--cp-danger); }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--cp-overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  padding: 28px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: var(--cp-shadow);
+}
+.modal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--cp-text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+.form-group input:focus, .form-group select:focus {
+  outline: none;
+  border-color: var(--cp-accent);
+  box-shadow: 0 0 0 3px var(--cp-accent-soft);
+}
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+
+.donut-container { display: flex; align-items: center; gap: 24px; }
+.donut-legend { display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+.chart-container { position: relative; width: 100%; height: 200px; }
+.chart-container canvas { width: 100% !important; height: 100% !important; }
 </style>
 </head>
 <body>
@@ -252,12 +337,8 @@ tr:hover td { background: var(--cp-accent-soft); }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
       Recurring
     </button>
-    <button class="nav-item" data-page="insights">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      Insights
-    </button>
     <div style="flex:1;"></div>
-    <div id="sync-indicator" class="sync-status" style="margin-bottom:12px;justify-content:center;"><span>⚙️ Local</span></div>
+    <div id="sync-indicator" class="sync-status synced"><span>☁️ Ready</span></div>
     <button class="nav-item" onclick="openModal('cloud')" style="border-top:1px solid var(--cp-border);padding-top:12px;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
       Cloud Sync
@@ -274,12 +355,111 @@ tr:hover td { background: var(--cp-accent-soft); }
         <h1>Good afternoon! 👋</h1>
         <p>Here's your financial overview for July 2026</p>
       </div>
+
       <div class="stats-grid">
-        <div class="card" onclick="openModal('cloud')">
-          <div class="card-title">☁️ Cloud Sync</div>
-          <div class="card-value" id="sync-status">Local</div>
-          <div class="card-change" style="color:var(--cp-text-muted);">Enable cloud sync to access your data on any device</div>
+        <div class="card">
+          <div class="card-title">Net Worth</div>
+          <div class="card-value" id="net-worth">₹0</div>
+          <div class="card-change positive">↑ 8.2% this month</div>
         </div>
+        <div class="card">
+          <div class="card-title">Monthly Income</div>
+          <div class="card-value" id="monthly-income">₹0</div>
+          <div class="card-change positive">↑ Multiple sources</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Monthly Expenses</div>
+          <div class="card-value" id="monthly-expenses">₹0</div>
+          <div class="card-change negative">↑ 3.1% vs last month</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Savings Rate</div>
+          <div class="card-value" id="savings-rate">0%</div>
+          <div class="card-change positive">🔥 12-day streak</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Spending by Category</div>
+          </div>
+          <div class="donut-container">
+            <canvas id="donut-chart" width="140" height="140"></canvas>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Transactions</div>
+          </div>
+          <div style="max-height:300px;overflow-y:auto;">
+            <div id="recent-tx" style="font-size:0.8125rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-transactions">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h1>Transactions</h1>
+          <p>Track every rupee in and out</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('transaction')">+ Add Transaction</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Amount</th></tr></thead>
+            <tbody id="all-transactions"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-budgets">
+      <div class="page-header">
+        <h1>Budgets</h1>
+        <p>Stay on track with monthly spending limits</p>
+      </div>
+      <div class="stats-grid">
+        <div class="card">
+          <div class="card-title">Total Budget</div>
+          <div class="card-value" id="total-budget">₹0</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Spent</div>
+          <div class="card-value" id="total-spent">₹0</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Remaining</div>
+          <div class="card-value" id="total-remaining">₹0</div>
+        </div>
+      </div>
+      <div class="card">
+        <div id="budget-list"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-goals">
+      <div class="page-header">
+        <h1>Financial Goals</h1>
+        <p>Set targets and watch your progress</p>
+      </div>
+      <div class="stats-grid" id="goals-list"></div>
+    </div>
+
+    <div class="page" id="page-recurring">
+      <div class="page-header">
+        <h1>Recurring Expenses</h1>
+        <p>Subscriptions and regular payments</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Monthly Recurring Total: <span id="recurring-total" style="color:var(--cp-accent)">₹0</span></div>
+        </div>
+        <div id="recurring-list"></div>
       </div>
     </div>
   </main>
@@ -288,17 +468,17 @@ tr:hover td { background: var(--cp-accent-soft); }
 <!-- Cloud Sync Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modal-cloud" style="display:none;" onclick="event.stopPropagation()">
-    <h2>☁️ Cloud Sync Settings</h2>
-    <p style="font-size:0.8125rem;color:var(--cp-text-muted);margin-bottom:16px;">Keep your data in sync across all devices. Data is stored securely on JSONBin (free, no credit card needed).</p>
+    <h2>☁️ Cloud Sync</h2>
+    <p style="font-size:0.8125rem;color:var(--cp-text-muted);margin-bottom:16px;">Keep your data in sync across all devices.</p>
     
     <div class="form-group">
       <label>API Key (from jsonbin.io)</label>
-      <input type="password" id="api-key-input" placeholder="Enter your JSONBin API key" value="">
+      <input type="password" id="api-key-input" placeholder="Get free key from jsonbin.io">
     </div>
     
     <div class="form-group">
       <label>Bin ID (auto-generated)</label>
-      <input type="text" id="bin-id-input" placeholder="Will be auto-generated on first sync" value="" readonly>
+      <input type="text" id="bin-id-input" placeholder="Auto-generated on first sync" readonly>
     </div>
     
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px;">
@@ -307,23 +487,60 @@ tr:hover td { background: var(--cp-accent-soft); }
       
       <div style="padding:12px;background:var(--cp-accent-soft);border-radius:0.625rem;font-size:0.75rem;color:var(--cp-text);">
         <strong>How to get a FREE API Key:</strong><br><br>
-        1️⃣ Visit <a href="https://jsonbin.io" target="_blank" style="color:var(--cp-accent);text-decoration:underline;">jsonbin.io</a><br>
-        2️⃣ Click "Sign Up" (free, no card required)<br>
-        3️⃣ Go to Account Settings<br>
-        4️⃣ Copy your API key<br>
-        5️⃣ Paste it here & click "Upload to Cloud"<br><br>
-        <strong>That's it!</strong> Your data syncs automatically between devices. 🎉
+        1. Visit <a href="https://jsonbin.io" target="_blank" style="color:var(--cp-accent);text-decoration:underline;">jsonbin.io</a><br>
+        2. Sign up (free, instant)<br>
+        3. Copy API key from Account Settings<br>
+        4. Paste here & click "Upload to Cloud"
       </div>
     </div>
     
-    <div style="margin-top:16px;padding:12px;background:rgba(22,163,74,0.1);border-radius:0.625rem;font-size:0.75rem;color:var(--cp-success);">
-      ✅ <strong>Free tier includes:</strong><br>
-      • 5 bins (storage units)<br>
-      • Unlimited API calls<br>
-      • No expiration<br>
-      • No credit card needed
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Close</button>
     </div>
-    
+  </div>
+
+  <div class="modal" id="modal-transaction" style="display:none;" onclick="event.stopPropagation()">
+    <h2>Add Transaction</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="tx-type"><option value="expense">Expense</option><option value="income">Income</option></select>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="tx-date">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="tx-desc" placeholder="e.g., Grocery shopping">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Amount (₹)</label>
+        <input type="number" id="tx-amount" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="tx-category"></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addTransaction()">Add</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-data" style="display:none;" onclick="event.stopPropagation()">
+    <h2>Backup & Restore</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <button class="btn btn-primary" onclick="exportData()">📥 Export (Download JSON)</button>
+      <div class="form-group" style="margin:0;">
+        <label>Import File</label>
+        <input type="file" id="import-file" accept=".json">
+      </div>
+      <button class="btn" onclick="importData()" style="border-color:var(--cp-warning);color:var(--cp-warning);">📤 Import</button>
+    </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Close</button>
     </div>
@@ -331,116 +548,222 @@ tr:hover td { background: var(--cp-accent-soft); }
 </div>
 
 <script>
-// ========= CLOUD SYNC =========
 const JSONBIN_API_URL = 'https://api.jsonbin.io/v3';
 const CLOUD_CONFIG_KEY = 'financeflow_cloud_config';
+const STORAGE_KEY = 'financeflow_data';
 
-function getCloudConfig() {
-  const raw = localStorage.getItem(CLOUD_CONFIG_KEY);
-  return raw ? JSON.parse(raw) : { apiKey: '', binId: '' };
+const categories = [
+  { id: 'food', name: 'Food & Dining', icon: '🍕', color: '#ef4444' },
+  { id: 'transport', name: 'Transport', icon: '🚗', color: '#f59e0b' },
+  { id: 'shopping', name: 'Shopping', icon: '🛍️', color: '#8b5cf6' },
+  { id: 'bills', name: 'Bills & Utilities', icon: '💡', color: '#06b6d4' },
+  { id: 'health', name: 'Health', icon: '💊', color: '#10b981' },
+  { id: 'entertainment', name: 'Entertainment', icon: '🎬', color: '#ec4899' },
+  { id: 'salary', name: 'Salary', icon: '💰', color: '#16a34a' },
+  { id: 'freelance', name: 'Freelance', icon: '💻', color: '#0ea5e9' },
+];
+
+function getDefaultData() {
+  return {
+    transactions: [
+      { id: 1, date: '2026-07-19', desc: 'Salary - July', category: 'salary', type: 'income', amount: 85000 },
+      { id: 2, date: '2026-07-18', desc: 'Grocery at DMart', category: 'food', type: 'expense', amount: 3200 },
+      { id: 3, date: '2026-07-17', desc: 'Uber rides', category: 'transport', type: 'expense', amount: 850 },
+      { id: 4, date: '2026-07-16', desc: 'Netflix subscription', category: 'entertainment', type: 'expense', amount: 649 },
+      { id: 5, date: '2026-07-15', desc: 'Electricity bill', category: 'bills', type: 'expense', amount: 2100 },
+    ],
+    budgets: [
+      { category: 'food', limit: 8000 },
+      { category: 'transport', limit: 3000 },
+      { category: 'entertainment', limit: 2000 },
+    ],
+    goals: [
+      { id: 1, name: 'Emergency Fund', target: 300000, current: 180000, date: '2026-12-31', priority: 'high' },
+      { id: 2, name: 'Vacation - Maldives', target: 150000, current: 62000, date: '2027-03-15', priority: 'medium' },
+    ],
+    recurring: [
+      { id: 1, name: 'Netflix', amount: 649, freq: 'monthly', category: 'entertainment' },
+      { id: 2, name: 'Internet', amount: 999, freq: 'monthly', category: 'bills' },
+    ],
+    netWorthHistory: [520000, 545000, 560000, 578000, 595000, 610000, 632000],
+  };
 }
 
-function saveCloudConfig(config) {
-  localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(config));
-}
-
-function updateSyncStatus(text, className = '') {
-  const indicator = document.getElementById('sync-indicator');
-  if (indicator) {
-    indicator.className = 'sync-status ' + className;
-    indicator.innerHTML = text;
-  }
-  const statusEl = document.getElementById('sync-status');
-  if (statusEl) statusEl.textContent = text.replace(/<[^>]*>/g, '');
-}
-
-async function syncToCloud() {
-  const apiKey = document.getElementById('api-key-input').value.trim();
-  if (!apiKey) {
-    alert('❌ Please enter your JSONBin API key\n\n1. Visit jsonbin.io\n2. Sign up (free)\n3. Copy API key from settings\n4. Paste here');
-    return;
-  }
-
-  updateSyncStatus('⏳ Uploading...', 'syncing');
-  
+function loadData() {
   try {
-    const config = getCloudConfig();
-    const url = config.binId 
-      ? `${JSONBIN_API_URL}/b/${config.binId}`
-      : JSONBIN_API_URL + '/b';
-    
-    const sampleData = {
-      message: "✅ Cloud sync enabled! Your FinanceFlow data is now synced.",
-      timestamp: new Date().toISOString(),
-      deviceName: navigator.userAgent.split('(')[0].trim()
-    };
-
-    const response = await fetch(url, {
-      method: config.binId ? 'PUT' : 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': apiKey
-      },
-      body: JSON.stringify(sampleData)
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) throw new Error('Invalid API key');
-      throw new Error('Upload failed: ' + response.statusText);
-    }
-    
-    const result = await response.json();
-    const binId = result.metadata?.id || config.binId;
-    
-    saveCloudConfig({ apiKey, binId });
-    document.getElementById('bin-id-input').value = binId;
-    
-    updateSyncStatus('✅ Connected to cloud!', 'synced');
-    alert('✅ Cloud sync enabled!\n\nBin ID: ' + binId + '\n\nYour data will sync automatically. Share this Bin ID with other devices to access your data there.');
-    setTimeout(() => { closeModal(); }, 500);
-  } catch (err) {
-    console.error('Sync error:', err);
-    updateSyncStatus('❌ Sync failed', 'error');
-    alert('❌ Failed to sync:\n' + err.message);
-  }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : getDefaultData();
+  } catch { return getDefaultData(); }
 }
 
-async function syncFromCloud() {
-  const apiKey = document.getElementById('api-key-input').value.trim();
-  const binId = document.getElementById('bin-id-input').value.trim();
-  
-  if (!apiKey || !binId) {
-    alert('❌ Please enter API key and Bin ID\n\nUpload to cloud first to generate a Bin ID');
-    return;
-  }
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
 
-  updateSyncStatus('⬇️ Downloading...', 'syncing');
-  
-  try {
-    const response = await fetch(`${JSONBIN_API_URL}/b/${binId}/latest`, {
-      headers: { 'X-Master-Key': apiKey }
-    });
+let data = loadData();
 
-    if (!response.ok) throw new Error('Download failed: ' + response.statusText);
-    
-    const result = await response.json();
-    updateSyncStatus('✅ Synced from cloud!', 'synced');
-    alert('✅ Successfully downloaded from cloud!\n\nBin ID: ' + binId);
-    closeModal();
-  } catch (err) {
-    console.error('Sync error:', err);
-    updateSyncStatus('❌ Sync failed', 'error');
-    alert('❌ Failed to download:\n' + err.message);
-  }
+function fmt(n) { return '₹' + n.toLocaleString('en-IN'); }
+function fmtDate(d) { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); }
+
+function renderDashboard() {
+  const income = data.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expenses = data.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const netWorth = data.netWorthHistory[data.netWorthHistory.length - 1];
+  const savingsRate = income > 0 ? Math.round(((income - expenses) / income) * 100) : 0;
+
+  document.getElementById('net-worth').textContent = fmt(netWorth);
+  document.getElementById('monthly-income').textContent = fmt(income);
+  document.getElementById('monthly-expenses').textContent = fmt(expenses);
+  document.getElementById('savings-rate').textContent = savingsRate + '%';
+
+  // Donut chart
+  const expenseTx = data.transactions.filter(t => t.type === 'expense');
+  const expByCategory = {};
+  expenseTx.forEach(t => { expByCategory[t.category] = (expByCategory[t.category] || 0) + t.amount; });
+  
+  const legend = document.getElementById('donut-legend');
+  legend.innerHTML = Object.entries(expByCategory).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([catId, amount]) => {
+    const cat = categories.find(c => c.id === catId);
+    return `<div class="legend-item"><span class="legend-dot" style="background:${cat?.color || '#6b7280'}"></span><span>${cat?.name || catId}</span></div>`;
+  }).join('');
+
+  const canvas = document.getElementById('donut-chart');
+  const existingChart = Chart.helpers?.instances?.find(c => c.canvas === canvas);
+  if (existingChart) existingChart.destroy();
+  
+  new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(expByCategory).map(id => categories.find(c => c.id === id)?.name || id),
+      datasets: [{
+        data: Object.values(expByCategory),
+        backgroundColor: Object.keys(expByCategory).map(id => categories.find(c => c.id === id)?.color || '#6b7280'),
+        borderColor: 'var(--cp-surface)',
+        borderWidth: 2,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  // Recent transactions
+  const recentTx = document.getElementById('recent-tx');
+  recentTx.innerHTML = data.transactions.slice(0, 5).map(t => {
+    const cat = categories.find(c => c.id === t.category);
+    return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cp-border);">
+      <div>${cat?.icon} ${t.desc}</div>
+      <div style="color:${t.type === 'income' ? 'var(--cp-success)' : 'var(--cp-danger)'}; font-weight:600;">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTransactions() {
+  const tbody = document.getElementById('all-transactions');
+  tbody.innerHTML = data.transactions.map(t => {
+    const cat = categories.find(c => c.id === t.category);
+    return `<tr>
+      <td>${fmtDate(t.date)}</td>
+      <td>${cat?.icon} ${t.desc}</td>
+      <td>${cat?.name}</td>
+      <td>${t.type}</td>
+      <td style="color:${t.type === 'income' ? 'var(--cp-success)' : 'var(--cp-danger)'}; font-weight:600;">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderBudgets() {
+  const budgetList = document.getElementById('budget-list');
+  let totalBudget = 0, totalSpent = 0;
+  
+  data.budgets.forEach(b => {
+    const spent = data.transactions
+      .filter(t => t.type === 'expense' && t.category === b.category)
+      .reduce((s, t) => s + t.amount, 0);
+    totalBudget += b.limit;
+    totalSpent += spent;
+  });
+  
+  document.getElementById('total-budget').textContent = fmt(totalBudget);
+  document.getElementById('total-spent').textContent = fmt(totalSpent);
+  document.getElementById('total-remaining').textContent = fmt(Math.max(0, totalBudget - totalSpent));
+  
+  budgetList.innerHTML = data.budgets.map(b => {
+    const spent = data.transactions
+      .filter(t => t.type === 'expense' && t.category === b.category)
+      .reduce((s, t) => s + t.amount, 0);
+    const cat = categories.find(c => c.id === b.category);
+    const progress = Math.min(100, (spent / b.limit) * 100);
+    return `<div style="display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--cp-border);">
+      <div style="font-weight:600;flex:1;">${cat?.name}</div>
+      <div style="font-size:0.75rem;color:var(--cp-text-muted);">${fmt(spent)} / ${fmt(b.limit)}</div>
+      <div style="width:120px;">
+        <div class="progress-bar"><div class="progress-fill" style="width:${progress}%;background:${progress > 100 ? '#dc2626' : '#16a34a'};"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGoals() {
+  const container = document.getElementById('goals-list');
+  container.innerHTML = data.goals.map(goal => {
+    const progress = Math.min(100, (goal.current / goal.target) * 100);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-weight:600;">${goal.name}</div>
+        <div style="font-size:0.75rem;color:var(--cp-text-muted);">${Math.round(progress)}%</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%;background:var(--cp-success);"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:0.75rem;color:var(--cp-text-muted);">
+        <span>${fmt(goal.current)} / ${fmt(goal.target)}</span>
+        <span>${goal.current >= goal.target ? '✅ Done' : '🔄 In progress'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderRecurring() {
+  const container = document.getElementById('recurring-list');
+  let total = 0;
+  data.recurring.forEach(r => { if (r.freq === 'monthly') total += r.amount; });
+  document.getElementById('recurring-total').textContent = fmt(total);
+  
+  container.innerHTML = data.recurring.map(r => {
+    const cat = categories.find(c => c.id === r.category);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--cp-border);">
+      <div>
+        <div style="font-weight:600;">${r.name}</div>
+        <div style="font-size:0.75rem;color:var(--cp-text-muted);">${r.freq}</div>
+      </div>
+      <div style="font-weight:600;color:var(--cp-danger);">${fmt(r.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  
+  if (page === 'dashboard') renderDashboard();
+  else if (page === 'transactions') renderTransactions();
+  else if (page === 'budgets') renderBudgets();
+  else if (page === 'goals') renderGoals();
+  else if (page === 'recurring') renderRecurring();
 }
 
 function openModal(type) {
   document.getElementById('modal-overlay').classList.add('active');
-  if (type === 'cloud') {
+  if (type === 'transaction') {
+    document.getElementById('modal-transaction').style.display = 'block';
+    document.getElementById('tx-date').valueAsDate = new Date();
+    document.getElementById('tx-category').innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  } else if (type === 'cloud') {
     document.getElementById('modal-cloud').style.display = 'block';
-    const config = getCloudConfig();
+    const config = JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY) || '{}');
     if (config.apiKey) document.getElementById('api-key-input').value = config.apiKey;
     if (config.binId) document.getElementById('bin-id-input').value = config.binId;
+  } else if (type === 'data') {
+    document.getElementById('modal-data').style.display = 'block';
   }
 }
 
@@ -450,68 +773,101 @@ function closeModal(event) {
   document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 }
 
+function addTransaction() {
+  const type = document.getElementById('tx-type').value;
+  const date = document.getElementById('tx-date').value;
+  const desc = document.getElementById('tx-desc').value;
+  const amount = parseFloat(document.getElementById('tx-amount').value);
+  const category = document.getElementById('tx-category').value;
+  
+  if (!desc || !amount) { alert('Fill all fields'); return; }
+  
+  data.transactions.unshift({ id: Date.now(), date, desc, category, type, amount });
+  saveData();
+  closeModal();
+  navigateTo('transactions');
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'financeflow_backup.json';
+  a.click();
+}
+
+function importData() {
+  const file = document.getElementById('import-file').files[0];
+  if (!file) { alert('Select a file'); return; }
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      data = JSON.parse(e.target.result);
+      saveData();
+      closeModal();
+      navigateTo('dashboard');
+    } catch { alert('Invalid JSON file'); }
+  };
+  reader.readAsText(file);
+}
+
+async function syncToCloud() {
+  const apiKey = document.getElementById('api-key-input').value.trim();
+  if (!apiKey) { alert('Enter API key from jsonbin.io'); return; }
+  
+  const config = JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY) || '{}');
+  const url = config.binId ? `${JSONBIN_API_URL}/b/${config.binId}` : JSONBIN_API_URL + '/b';
+  
+  try {
+    const response = await fetch(url, {
+      method: config.binId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) throw new Error(response.statusText);
+    const result = await response.json();
+    const binId = result.metadata?.id || config.binId;
+    
+    localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify({ apiKey, binId }));
+    document.getElementById('bin-id-input').value = binId;
+    alert('✅ Synced to cloud!\nBin ID: ' + binId);
+  } catch (err) {
+    alert('❌ Sync failed: ' + err.message);
+  }
+}
+
+async function syncFromCloud() {
+  const apiKey = document.getElementById('api-key-input').value.trim();
+  const binId = document.getElementById('bin-id-input').value.trim();
+  
+  if (!apiKey || !binId) { alert('Enter API key and Bin ID'); return; }
+  
+  try {
+    const response = await fetch(`${JSONBIN_API_URL}/b/${binId}/latest`, {
+      headers: { 'X-Master-Key': apiKey }
+    });
+    
+    if (!response.ok) throw new Error(response.statusText);
+    const result = await response.json();
+    data = result.record;
+    saveData();
+    alert('✅ Downloaded from cloud!');
+    closeModal();
+    navigateTo('dashboard');
+  } catch (err) {
+    alert('❌ Download failed: ' + err.message);
+  }
+}
+
 // Initialize
-window.addEventListener('load', () => {
-  const config = getCloudConfig();
-  updateSyncStatus(config.binId ? '☁️ Cloud enabled' : '⚙️ Local');
-});
-
 document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
-  });
+  item.addEventListener('click', () => navigateTo(item.dataset.page));
 });
-</script>
 
-<style>
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--cp-text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
-.form-group input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--cp-border);
-  border-radius: 0.625rem;
-  background: var(--cp-bg);
-  color: var(--cp-text);
-  font-size: 0.875rem;
-  font-family: inherit;
-}
-.form-group input:focus {
-  outline: none;
-  border-color: var(--cp-accent);
-  box-shadow: 0 0 0 3px var(--cp-accent-soft);
-}
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--cp-overlay);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-.modal-overlay.active { opacity: 1; pointer-events: all; }
-.modal {
-  background: var(--cp-surface);
-  border: 1px solid var(--cp-border);
-  border-radius: 16px;
-  padding: 28px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: var(--cp-shadow);
-}
-.modal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; }
-.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
-.mobile-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 0.625rem; padding: 8px; cursor: pointer; }
-@media (max-width: 900px) {
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); }
-  .main { margin-left: 0; padding: 20px; }
-  .mobile-toggle { display: flex !important; }
-}
-</style>
+renderDashboard();
+</script>
+</body>
+</html>
