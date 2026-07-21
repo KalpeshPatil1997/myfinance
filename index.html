@@ -150,7 +150,7 @@ tr:hover td{background:var(--cp-accent-soft)}
     <button class="nav-item" data-page="insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 16l4-4 4 4 5-5"/></svg>Insights</button>
     <div style="flex:1"></div>
     <div class="sync-status" id="sync-status">&#9729;&#65039; Synced</div>
-    <button class="nav-item" onclick="openModal('cloud')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>Cloud Sync</button>
+    <button class="nav-item" onclick="openModal('cloud')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>Sign In</button>
     <button class="nav-item" onclick="openModal('data')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Backup</button>
   </aside>
 
@@ -279,7 +279,7 @@ tr:hover td{background:var(--cp-accent-soft)}
   <div class="modal" id="modal-split" style="display:none" onclick="event.stopPropagation()"><h2 id="split-modal-title">New Split</h2><input type="hidden" id="split-edit-id"><div class="form-group"><label>Title</label><input type="text" id="split-title" placeholder="e.g., Dinner with friends"></div><div class="form-group"><label>Total Amount</label><input type="number" id="split-total" placeholder="0" min="0" oninput="updatePayerInputs()"></div><div class="form-group"><label>Members (comma-separated, include payers)</label><input type="text" id="split-members" placeholder="You, Amit, Priya" oninput="updatePayerInputs()"></div><div class="form-group"><label>Who paid? (enter amount per payer, 0 if didn't pay)</label><div id="payer-inputs" style="margin-top:6px"></div></div><div class="form-group"><label>Split equally?</label><select id="split-mode" onchange="updatePayerInputs()"><option value="equal">Equal split</option><option value="custom">Custom shares</option></select></div><div id="custom-shares" style="display:none;margin-top:6px"></div><div class="modal-actions"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="split-save-btn" onclick="saveSplit()">Create</button></div></div>
   <div class="modal" id="modal-template" style="display:none" onclick="event.stopPropagation()"><h2>Quick Templates</h2><div id="template-list"></div><div style="margin-top:12px;border-top:1px solid var(--cp-border);padding-top:12px"><div class="form-row"><div class="form-group" style="margin:0"><input type="text" id="tpl-name" placeholder="Name"></div><div class="form-group" style="margin:0"><input type="number" id="tpl-amount" placeholder="Amount" min="0"></div></div><div class="form-group"><select id="tpl-category"></select></div><button class="btn btn-primary btn-sm" onclick="addTemplate()">+ Add</button></div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div></div>
   <div class="modal" id="modal-data" style="display:none" onclick="event.stopPropagation()"><h2>Backup & Restore</h2><div style="display:flex;flex-direction:column;gap:10px"><button class="btn btn-primary" onclick="exportData()">&#128229; Export JSON</button><div class="form-group" style="margin:0"><label>Import</label><input type="file" id="import-file" accept=".json" style="padding:6px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem"></div><button class="btn" onclick="importData()">&#128228; Import</button></div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div></div>
-  <div class="modal" id="modal-cloud" style="display:none" onclick="event.stopPropagation()"><h2>&#9729;&#65039; Cloud Sync</h2>
+  <div class="modal" id="modal-cloud" style="display:none" onclick="event.stopPropagation()"><h2>&#128100; Sign In</h2>
     <div id="cloud-signed-out">
       <div style="text-align:center;padding:20px 0">
         <div style="font-size:2.5rem;margin-bottom:12px">&#128274;</div>
@@ -293,10 +293,6 @@ tr:hover td{background:var(--cp-accent-soft)}
       <div style="font-weight:700;color:var(--cp-success);font-size:.8125rem" id="user-display-name">Connected</div>
       <div style="font-size:.625rem;color:var(--cp-text-muted);margin-top:4px" id="user-email"></div>
       <div style="font-size:.625rem;color:var(--cp-text-soft);margin-top:8px" id="last-sync-time"></div>
-      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
-        <button class="btn btn-sm" onclick="firebasePush()">&#11014;&#65039; Force Push</button>
-        <button class="btn btn-sm" onclick="firebasePull()">&#11015;&#65039; Force Pull</button>
-      </div>
     </div>
     <div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="firebaseSignOut()" id="btn-signout" style="display:none;color:var(--cp-danger);border-color:var(--cp-danger)">Sign Out</button></div>
   </div>
@@ -703,7 +699,7 @@ function updateAuthUI(){
 }
 async function firebaseSignIn(){
   if(!firebaseApp)initFirebase();
-  try{const provider=new firebase.auth.GoogleAuthProvider();await firebase.auth().signInWithPopup(provider)}catch(e){if(e.code!=='auth/popup-closed-by-user')alert('Sign-in error: '+e.message)}
+  try{const provider=new firebase.auth.GoogleAuthProvider();await firebase.auth().signInWithPopup(provider);closeModal();navigateTo('dashboard')}catch(e){if(e.code!=='auth/popup-closed-by-user')alert('Sign-in error: '+e.message)}
 }
 function firebaseSignOut(){if(!confirm('Sign out? Data will reset to defaults.'))return;firebase.auth().signOut();firebaseUser=null;_firebaseListenerActive=false;_skipFirebaseSync=true;data=getDefaultData();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());updateAuthUI()}
 function getDbRef(){if(!firebaseUser||!firebaseDb)return null;return firebaseDb.ref('users/'+firebaseUser.uid+'/data')}
