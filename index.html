@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>FinanceFlow — Smart Money Tracker</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
   (() => { document.documentElement.setAttribute("data-theme", new URLSearchParams(window.location.search).get("clawpilotTheme") || "dark"); })();
 </script>
@@ -276,13 +279,33 @@ tr:hover td{background:var(--cp-accent-soft)}
   <div class="modal" id="modal-split" style="display:none" onclick="event.stopPropagation()"><h2 id="split-modal-title">New Split</h2><input type="hidden" id="split-edit-id"><div class="form-group"><label>Title</label><input type="text" id="split-title" placeholder="e.g., Dinner with friends"></div><div class="form-group"><label>Total Amount</label><input type="number" id="split-total" placeholder="0" min="0" oninput="updatePayerInputs()"></div><div class="form-group"><label>Members (comma-separated, include payers)</label><input type="text" id="split-members" placeholder="You, Amit, Priya" oninput="updatePayerInputs()"></div><div class="form-group"><label>Who paid? (enter amount per payer, 0 if didn't pay)</label><div id="payer-inputs" style="margin-top:6px"></div></div><div class="form-group"><label>Split equally?</label><select id="split-mode" onchange="updatePayerInputs()"><option value="equal">Equal split</option><option value="custom">Custom shares</option></select></div><div id="custom-shares" style="display:none;margin-top:6px"></div><div class="modal-actions"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="split-save-btn" onclick="saveSplit()">Create</button></div></div>
   <div class="modal" id="modal-template" style="display:none" onclick="event.stopPropagation()"><h2>Quick Templates</h2><div id="template-list"></div><div style="margin-top:12px;border-top:1px solid var(--cp-border);padding-top:12px"><div class="form-row"><div class="form-group" style="margin:0"><input type="text" id="tpl-name" placeholder="Name"></div><div class="form-group" style="margin:0"><input type="number" id="tpl-amount" placeholder="Amount" min="0"></div></div><div class="form-group"><select id="tpl-category"></select></div><button class="btn btn-primary btn-sm" onclick="addTemplate()">+ Add</button></div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div></div>
   <div class="modal" id="modal-data" style="display:none" onclick="event.stopPropagation()"><h2>Backup & Restore</h2><div style="display:flex;flex-direction:column;gap:10px"><button class="btn btn-primary" onclick="exportData()">&#128229; Export JSON</button><div class="form-group" style="margin:0"><label>Import</label><input type="file" id="import-file" accept=".json" style="padding:6px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem"></div><button class="btn" onclick="importData()">&#128228; Import</button></div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div></div>
-  <div class="modal" id="modal-cloud" style="display:none" onclick="event.stopPropagation()"><h2>&#9729;&#65039; Cloud Sync</h2><div id="cloud-setup"><details style="font-size:.6875rem;background:var(--cp-surface-soft);padding:10px;border-radius:.625rem;margin-bottom:12px"><summary style="cursor:pointer;font-weight:600">Setup guide</summary><ol style="padding-left:14px;line-height:2;margin-top:6px"><li>Sign up at <a href="https://jsonbin.io" target="_blank" style="color:var(--cp-link)">jsonbin.io</a></li><li>API Keys &rarr; Copy X-Master-Key</li><li>Paste below &rarr; Connect</li></ol></details><div class="form-group"><label>API Key</label><input type="password" id="cloud-apikey" placeholder="$2a$10$..." style="font-family:Consolas,monospace;font-size:.6875rem"></div><div class="form-group"><label>Bin ID (blank = auto)</label><input type="text" id="cloud-binid" placeholder="Auto-created" style="font-family:Consolas,monospace;font-size:.6875rem"></div></div><div id="cloud-connected" style="display:none;text-align:center;padding:12px 0"><div style="font-size:1.5rem">&#9989;</div><div style="font-weight:700;color:var(--cp-success);font-size:.8125rem">Connected</div><div style="font-size:.6875rem;color:var(--cp-text-muted);margin-top:4px" id="cloud-info"></div></div><div class="modal-actions" style="flex-wrap:wrap;gap:6px"><button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="cloudPull()" id="btn-pull" style="display:none">&#11015;&#65039; Pull</button><button class="btn" onclick="cloudPush()" id="btn-push" style="display:none">&#11014;&#65039; Push</button><button class="btn btn-primary" onclick="cloudConnect()" id="btn-connect">Connect</button><button class="btn" onclick="cloudDisconnect()" id="btn-disconnect" style="display:none;color:var(--cp-danger);border-color:var(--cp-danger)">Disconnect</button></div></div>
+  <div class="modal" id="modal-cloud" style="display:none" onclick="event.stopPropagation()"><h2>&#9729;&#65039; Cloud Sync</h2>
+    <div id="cloud-signed-out">
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:2.5rem;margin-bottom:12px">&#128274;</div>
+        <p style="font-size:.8125rem;color:var(--cp-text);margin-bottom:4px;font-weight:600">Sign in to sync your data</p>
+        <p style="font-size:.6875rem;color:var(--cp-text-muted);margin-bottom:16px">Your data syncs in real-time across all your devices.</p>
+        <button class="btn btn-primary" onclick="firebaseSignIn()" style="display:flex;align-items:center;gap:8px;margin:0 auto;padding:10px 20px"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Sign in with Google</button>
+      </div>
+    </div>
+    <div id="cloud-signed-in" style="display:none;text-align:center;padding:12px 0">
+      <div style="font-size:1.5rem;margin-bottom:4px">&#9989;</div>
+      <div style="font-weight:700;color:var(--cp-success);font-size:.8125rem" id="user-display-name">Connected</div>
+      <div style="font-size:.625rem;color:var(--cp-text-muted);margin-top:4px" id="user-email"></div>
+      <div style="font-size:.625rem;color:var(--cp-text-soft);margin-top:8px" id="last-sync-time"></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <button class="btn btn-sm" onclick="firebasePush()">&#11014;&#65039; Force Push</button>
+        <button class="btn btn-sm" onclick="firebasePull()">&#11015;&#65039; Force Pull</button>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="firebaseSignOut()" id="btn-signout" style="display:none;color:var(--cp-danger);border-color:var(--cp-danger)">Sign Out</button></div>
+  </div>
 </div>
 
 <script>
-const STORAGE_KEY='financeflow_data',CLOUD_KEY='financeflow_cloud';
-function getCloudConfig(){try{return JSON.parse(localStorage.getItem(CLOUD_KEY))||{}}catch{return{}}}
-function setCloudConfig(c){localStorage.setItem(CLOUD_KEY,JSON.stringify(c))}
+const STORAGE_KEY='financeflow_data';
+const FIREBASE_CONFIG={apiKey:"AIzaSyDA2171AL0Fqpajw6CLpDs1DR784_jltdI",authDomain:"financeflow-509dd.firebaseapp.com",databaseURL:"https://financeflow-509dd-default-rtdb.firebaseio.com",projectId:"financeflow-509dd",storageBucket:"financeflow-509dd.firebasestorage.app",messagingSenderId:"865055586616",appId:"1:865055586616:web:d2af8a29b46996fc8669cd"};
+let firebaseApp=null,firebaseDb=null,firebaseUser=null,_firebaseListenerActive=false;
 
 const categories=[
   {id:'food',name:'Food & Dining',icon:'\u{1F355}',color:'#ef4444'},
@@ -346,9 +369,10 @@ function getDefaultData(){return{
   netWorthHistory:[520000,545000,560000,578000,595000,610000,632000],
 }}
 
-function loadData(){try{const r=localStorage.getItem(STORAGE_KEY);if(r){const d=JSON.parse(r);if(!d.accounts)d.accounts=getDefaultData().accounts;if(!d.debts)d.debts=[];if(!d.splits)d.splits=[];return d}return getDefaultData()}catch{return getDefaultData()}}
-let _skipCloudPush=false;
-function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(_skipCloudPush)return;clearTimeout(window._syncT);window._syncT=setTimeout(()=>{const c=getCloudConfig();if(c.apiKey&&c.binId)cloudPush()},3000)}
+function getEmptyData(){return{transactions:[],accounts:[],budgets:[],goals:[],recurring:[],debts:[],splits:[],templates:[],lastRecurringRun:null,noSpendStreak:0,netWorthHistory:[]}}
+function loadData(){try{const r=localStorage.getItem(STORAGE_KEY);if(r){const d=JSON.parse(r);if(!d.accounts)d.accounts=[];if(!d.debts)d.debts=[];if(!d.splits)d.splits=[];if(!d.templates)d.templates=[];return d}return getDefaultData()}catch{return getDefaultData()}}
+let _skipFirebaseSync=false;
+function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(_skipFirebaseSync)return;clearTimeout(window._syncT);window._syncT=setTimeout(()=>firebasePush(),2000)}
 let data=loadData();
 
 function calcNetWorth(){return(data.accounts||[]).reduce((s,a)=>s+a.balance,0)-(data.debts||[]).reduce((s,d)=>s+(d.principal-d.paid),0)}
@@ -664,11 +688,38 @@ function editSplit(id){const s=data.splits.find(x=>x.id===id);if(!s)return;openM
 function exportData(){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='financeflow-'+today()+'.json';a.click()}
 function importData(){const f=document.getElementById('import-file').files[0];if(!f){alert('Select file');return}const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.transactions){data=d;saveData();closeModal();renderPage(getCurrentPage());alert('Done!')}else alert('Invalid')}catch{alert('Error')}};r.readAsText(f)}
 
-function updateCloudUI(){const c=getCloudConfig(),ok=c.apiKey&&c.binId;document.getElementById('cloud-setup').style.display=ok?'none':'block';document.getElementById('cloud-connected').style.display=ok?'block':'none';document.getElementById('btn-connect').style.display=ok?'none':'inline-flex';document.getElementById('btn-pull').style.display=ok?'inline-flex':'none';document.getElementById('btn-push').style.display=ok?'inline-flex':'none';document.getElementById('btn-disconnect').style.display=ok?'inline-flex':'none';if(ok){document.getElementById('cloud-info').textContent='Bin: '+c.binId;document.getElementById('sync-status').style.display='block'}else document.getElementById('sync-status').style.display='none';if(c.apiKey)document.getElementById('cloud-apikey').value=c.apiKey;if(c.binId)document.getElementById('cloud-binid').value=c.binId}
-async function cloudConnect(){const ak=document.getElementById('cloud-apikey').value.trim();let bi=document.getElementById('cloud-binid').value.trim();if(!ak){alert('Enter API key');return}try{if(bi){const r=await fetch('https://api.jsonbin.io/v3/b/'+bi+'/latest',{headers:{'X-Master-Key':ak}});if(!r.ok)throw new Error('Invalid')}else{const r=await fetch('https://api.jsonbin.io/v3/b',{method:'POST',headers:{'Content-Type':'application/json','X-Master-Key':ak,'X-Bin-Name':'FinanceFlow','X-Bin-Private':'true'},body:JSON.stringify(data)});if(!r.ok)throw new Error('Failed');bi=(await r.json()).metadata.id}setCloudConfig({apiKey:ak,binId:bi,lastSync:new Date().toLocaleString()});updateCloudUI();alert('Connected!')}catch(e){alert(e.message)}}
-async function cloudPush(){const c=getCloudConfig();if(!c.apiKey||!c.binId)return;const el=document.getElementById('sync-status');try{el.textContent='\u2B06 Pushing...';el.style.display='block';const r=await fetch('https://api.jsonbin.io/v3/b/'+c.binId,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':c.apiKey},body:JSON.stringify(data)});if(!r.ok){const err=await r.text();throw new Error('Push failed: '+r.status)}c.lastSync=new Date().toLocaleString();setCloudConfig(c);el.textContent='\u2601 Synced '+c.lastSync;setTimeout(()=>el.textContent='\u2601 Synced',4000)}catch(e){console.warn('Push fail:',e);el.textContent='\u26A0 Sync failed';el.style.color='var(--cp-danger)';setTimeout(()=>{el.style.color='';el.textContent='\u2601 Synced'},5000)}}
-async function cloudPull(){const c=getCloudConfig();if(!c.apiKey||!c.binId)return;try{const r=await fetch('https://api.jsonbin.io/v3/b/'+c.binId+'/latest',{headers:{'X-Master-Key':c.apiKey}});if(!r.ok)throw new Error('Pull failed: '+r.status);const res=await r.json();if(res.record&&res.record.transactions){data=res.record;_skipCloudPush=true;saveData();_skipCloudPush=false;c.lastSync=new Date().toLocaleString();setCloudConfig(c);renderPage(getCurrentPage());alert('Pulled!')}else alert('Empty or invalid data')}catch(e){alert('Cloud pull error: '+e.message)}}
-function cloudDisconnect(){if(!confirm('Disconnect?'))return;localStorage.removeItem(CLOUD_KEY);updateCloudUI()}
+// === Firebase Cloud Sync ===
+function initFirebase(){
+  try{if(!firebaseApp){firebaseApp=firebase.initializeApp(FIREBASE_CONFIG)}firebaseDb=firebase.database();
+  firebase.auth().onAuthStateChanged(user=>{firebaseUser=user;updateAuthUI();if(user)startFirebaseListener()})}catch(e){console.warn('Firebase init error:',e)}
+}
+function updateAuthUI(){
+  const signedIn=!!firebaseUser;
+  document.getElementById('cloud-signed-out').style.display=signedIn?'none':'block';
+  document.getElementById('cloud-signed-in').style.display=signedIn?'block':'none';
+  document.getElementById('btn-signout').style.display=signedIn?'inline-flex':'none';
+  document.getElementById('sync-status').style.display=signedIn?'block':'none';
+  if(signedIn){document.getElementById('user-display-name').textContent='\u2705 '+firebaseUser.displayName;document.getElementById('user-email').textContent=firebaseUser.email;document.getElementById('sync-status').textContent='\u2601 Connected'}
+}
+async function firebaseSignIn(){
+  if(!firebaseApp)initFirebase();
+  try{const provider=new firebase.auth.GoogleAuthProvider();await firebase.auth().signInWithPopup(provider)}catch(e){if(e.code!=='auth/popup-closed-by-user')alert('Sign-in error: '+e.message)}
+}
+function firebaseSignOut(){if(!confirm('Sign out? Data will reset to defaults.'))return;firebase.auth().signOut();firebaseUser=null;_firebaseListenerActive=false;_skipFirebaseSync=true;data=getDefaultData();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());updateAuthUI()}
+function getDbRef(){if(!firebaseUser||!firebaseDb)return null;return firebaseDb.ref('users/'+firebaseUser.uid+'/data')}
+function startFirebaseListener(){
+  const ref=getDbRef();if(!ref||_firebaseListenerActive)return;_firebaseListenerActive=true;
+  ref.on('value',snap=>{const cloud=snap.val();if(cloud&&cloud.transactions){_skipFirebaseSync=true;data=cloud;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}});
+}
+function firebasePush(){
+  const ref=getDbRef();if(!ref)return;
+  const el=document.getElementById('sync-status');el.textContent='\u2B06 Pushing...';el.style.color='';
+  ref.set(data).then(()=>{el.textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Pushed: '+new Date().toLocaleString()}).catch(e=>{el.textContent='\u26A0 Push failed';el.style.color='var(--cp-danger)';console.warn(e)});
+}
+function firebasePull(){
+  const ref=getDbRef();if(!ref){alert('Not signed in');return}
+  ref.get().then(snap=>{const cloud=snap.val();if(cloud&&cloud.transactions){_skipFirebaseSync=true;data=cloud;saveData();_skipFirebaseSync=false;renderPage(getCurrentPage());alert('\u2705 Pulled latest data!')}else alert('No data on cloud yet.')}).catch(e=>alert('Pull error: '+e.message));
+}
 
 function openModal(type){
   document.getElementById('modal-overlay').classList.add('active');document.querySelectorAll('.modal').forEach(m=>m.style.display='none');document.getElementById('modal-'+type).style.display='block';closeSidebar();
@@ -678,7 +729,7 @@ function openModal(type){
   else if(type==='account'){document.getElementById('acc-modal-title').textContent='Add Account';document.getElementById('acc-edit-id').value='';document.getElementById('acc-name').value='';document.getElementById('acc-balance').value=''}
   else if(type==='debt'){document.getElementById('debt-modal-title').textContent='Add Debt';document.getElementById('debt-edit-id').value='';document.getElementById('debt-name').value='';document.getElementById('debt-principal').value='';document.getElementById('debt-rate').value='';document.getElementById('debt-tenure').value='';document.getElementById('debt-emi').value='';document.getElementById('debt-paid').value='';document.getElementById('debt-start').value=today();document.getElementById('debt-save-btn').textContent='Add'}
   else if(type==='split'){document.getElementById('split-modal-title').textContent='New Split';document.getElementById('split-edit-id').value='';document.getElementById('split-title').value='';document.getElementById('split-total').value='';document.getElementById('split-members').value='';document.getElementById('split-mode').value='equal';document.getElementById('custom-shares').style.display='none';document.getElementById('payer-inputs').innerHTML='';document.getElementById('split-save-btn').textContent='Create'}
-  else if(type==='cloud')updateCloudUI();
+  else if(type==='cloud'){updateAuthUI();const cfg=getFirebaseConfig();if(cfg)document.getElementById('firebase-config-input').value=JSON.stringify(cfg,null,2)}
   else if(type==='template'){populateCategorySelect('tpl-category');renderTemplateList()}
 }
 function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.remove('active')}
@@ -691,7 +742,8 @@ function renderPage(p){switch(p){case'dashboard':renderDashboard();break;case'tr
 (function init(){
   document.getElementById('filter-category').innerHTML='<option value="all">All</option>'+categories.map(c=>'<option value="'+c.id+'">'+c.icon+' '+c.name+'</option>').join('');
   autoGenerateRecurring();renderDashboard();
-  const c=getCloudConfig();if(c.apiKey&&c.binId)document.getElementById('sync-status').style.display='block';
+  // Initialize Firebase if config exists
+  initFirebase();
 })();
 </script>
 </body>
