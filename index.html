@@ -366,7 +366,14 @@ function getDefaultData(){return{
 }}
 
 function getEmptyData(){return{transactions:[],accounts:[],budgets:[],goals:[],recurring:[],debts:[],splits:[],templates:[],lastRecurringRun:null,noSpendStreak:0,netWorthHistory:[]}}
-function loadData(){try{const r=localStorage.getItem(STORAGE_KEY);if(r){const d=JSON.parse(r);if(!d.accounts)d.accounts=[];if(!d.debts)d.debts=[];if(!d.splits)d.splits=[];if(!d.templates)d.templates=[];return d}return getDefaultData()}catch{return getDefaultData()}}
+function sanitizeData(d){
+  if(!d)return getDefaultData();
+  if(!d.transactions)d.transactions=[];if(!d.accounts)d.accounts=[];if(!d.budgets)d.budgets=[];
+  if(!d.goals)d.goals=[];if(!d.recurring)d.recurring=[];if(!d.debts)d.debts=[];
+  if(!d.splits)d.splits=[];if(!d.templates)d.templates=[];if(!d.netWorthHistory)d.netWorthHistory=[];
+  return d;
+}
+function loadData(){try{const r=localStorage.getItem(STORAGE_KEY);if(r){return sanitizeData(JSON.parse(r))}return getDefaultData()}catch{return getDefaultData()}}
 let _skipFirebaseSync=false;
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(_skipFirebaseSync)return;clearTimeout(window._syncT);window._syncT=setTimeout(()=>firebasePush(),2000)}
 let data=loadData();
@@ -378,7 +385,7 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('ope
 function navigateTo(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav-item[data-page]').forEach(x=>x.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');const b=document.querySelector('[data-page="'+p+'"]');if(b)b.classList.add('active');closeSidebar();renderPage(p)}
 document.querySelectorAll('.nav-item[data-page]').forEach(i=>{i.addEventListener('click',()=>navigateTo(i.dataset.page))});
 
-function fmt(n){const abs=Math.abs(n);if(abs>=1e7)return '\u20B9'+(abs/1e7).toFixed(2).replace(/\.?0+$/,'')+' Cr';if(abs>=1e5)return '\u20B9'+(abs/1e5).toFixed(2).replace(/\.?0+$/,'')+' L';return '\u20B9'+abs.toLocaleString('en-IN')}
+function fmt(n){if(n==null||isNaN(n))return'\u20B90';const sign=n<0?'-':'';const abs=Math.abs(n);if(abs>=1e7)return sign+'\u20B9'+(abs/1e7).toFixed(2).replace(/\.?0+$/,'')+' Cr';if(abs>=1e5)return sign+'\u20B9'+(abs/1e5).toFixed(2).replace(/\.?0+$/,'')+' L';return sign+'\u20B9'+abs.toLocaleString('en-IN')}
 function fmtDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
 function today(){return new Date().toISOString().split('T')[0]}
 
@@ -405,27 +412,39 @@ function useTemplate(name,amount,category){data.transactions.unshift({id:Date.no
 function renderTemplateList(){document.getElementById('template-list').innerHTML=(data.templates||[]).map((t,i)=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--cp-border)"><span style="font-size:.75rem">'+(categories.find(c=>c.id===t.category)||{}).icon+' '+t.name+' \u2014 \u20B9'+t.amount+'</span><button class="btn-ghost" onclick="data.templates.splice('+i+',1);saveData();renderTemplateList()" style="color:var(--cp-danger)">\u2715</button></div>').join('')}
 function addTemplate(){const name=document.getElementById('tpl-name').value.trim(),amount=parseInt(document.getElementById('tpl-amount').value),category=document.getElementById('tpl-category').value;if(!name||!amount)return;if(!data.templates)data.templates=[];data.templates.push({name,amount,category});saveData();document.getElementById('tpl-name').value='';document.getElementById('tpl-amount').value='';renderTemplateList();renderTemplates()}
 
+function updateNetWorthHistory(){
+  const nw=calcNetWorth();if(!data.netWorthHistory)data.netWorthHistory=[];
+  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const key='nwh_last_month';const last=localStorage.getItem(key);
+  if(last!==mo){data.netWorthHistory.push(nw);if(data.netWorthHistory.length>12)data.netWorthHistory=data.netWorthHistory.slice(-12);localStorage.setItem(key,mo);saveData()}
+  else if(data.netWorthHistory.length>0){data.netWorthHistory[data.netWorthHistory.length-1]=nw}
+}
+
 function autoGenerateRecurring(){
   const now=new Date(),day=now.getDate(),mo=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  let changed=false;
   data.recurring.forEach(r=>{
     if(r.freq==='yearly'&&(now.getMonth()+1)!==1)return;
     const rDay=Math.min(r.day||1,28);
-    if(day<rDay)return; // Don't add until the scheduled day arrives
+    if(day<rDay)return;
     const prefix='[Auto] '+r.name;
     if(!data.transactions.some(t=>t.desc===prefix&&t.date.startsWith(mo))){
       data.transactions.push({id:Date.now()+Math.random()*1000,date:mo+'-'+String(rDay).padStart(2,'0'),desc:prefix,category:r.category,type:'expense',amount:r.amount,account:(data.accounts[0]||{}).id||''});
-      saveData();
+      changed=true;
     }
   });
+  if(changed)saveData();
 }
 
 function calcHealthScore(){
-  const income=data.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const expenses=data.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const mTx=data.transactions.filter(t=>t.date&&t.date.startsWith(mo));
+  const income=mTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expenses=mTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   let score=50;
   const sr=income>0?(income-expenses)/income:0;score+=Math.min(25,Math.round(sr*100));
   if(data.goals.length){score+=Math.round(data.goals.reduce((s,g)=>s+(g.current/g.target),0)/data.goals.length*15)}
-  const byC={};data.transactions.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
+  const byC={};mTx.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
   score+=Math.max(0,10-data.budgets.filter(b=>(byC[b.category]||0)>b.limit).length*3);
   const totalDebt=(data.debts||[]).reduce((s,d)=>s+(d.principal-d.paid),0);
   if(totalDebt>500000)score-=10;else if(totalDebt>100000)score-=5;
@@ -433,13 +452,14 @@ function calcHealthScore(){
 }
 
 function detectAnomalies(){
-  const now=new Date(),w1=new Date(now-7*86400000),w2=new Date(now-14*86400000);
-  const thisW=data.transactions.filter(t=>t.type==='expense'&&new Date(t.date)>=w1);
-  const lastW=data.transactions.filter(t=>t.type==='expense'&&new Date(t.date)>=w2&&new Date(t.date)<w1);
+  const now=new Date(),w1s=new Date(now-7*86400000).toISOString().split('T')[0],w2s=new Date(now-14*86400000).toISOString().split('T')[0],nows=now.toISOString().split('T')[0];
+  const thisW=data.transactions.filter(t=>t.type==='expense'&&t.date>=w1s&&t.date<=nows);
+  const lastW=data.transactions.filter(t=>t.type==='expense'&&t.date>=w2s&&t.date<w1s);
   const bT={},bL={};thisW.forEach(t=>{bT[t.category]=(bT[t.category]||0)+t.amount});lastW.forEach(t=>{bL[t.category]=(bL[t.category]||0)+t.amount});
   const alerts=[];
   for(const[cat,amt]of Object.entries(bT)){const prev=bL[cat]||0;if(prev>0&&amt>prev*2){const c=categories.find(x=>x.id===cat);alerts.push({icon:'\u26A0\uFE0F',text:'You spent <strong>'+Math.round(amt/prev)+'x more</strong> on '+((c||{}).name||cat)+' this week ('+fmt(amt)+' vs '+fmt(prev)+')'})}}
-  const byC={};data.transactions.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
+  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const byC={};data.transactions.filter(t=>t.type==='expense'&&t.date&&t.date.startsWith(mo)).forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
   data.budgets.forEach(b=>{if((byC[b.category]||0)>b.limit*0.9){const c=categories.find(x=>x.id===b.category);alerts.push({icon:'\u{1F534}',text:((c||{}).name||b.category)+' is at <strong>'+Math.round((byC[b.category]||0)/b.limit*100)+'%</strong> of budget'})}});
   return alerts;
 }
@@ -447,8 +467,10 @@ function detectAnomalies(){
 function toggleDrill(id,el){const p=document.getElementById(id);const o=p.classList.contains('open');document.querySelectorAll('.drill-down').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.card-clickable').forEach(c=>c.classList.remove('expanded'));if(!o){p.classList.add('open');el.classList.add('expanded')}}
 
 function renderDashboard(){
-  const income=data.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const expenses=data.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const mTx=data.transactions.filter(t=>t.date&&t.date.startsWith(mo));
+  const income=mTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expenses=mTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   document.getElementById('net-worth').textContent=fmt(calcNetWorth());
   document.getElementById('nw-change').textContent='Click to manage accounts';
   document.getElementById('monthly-income').textContent=fmt(income);
@@ -462,11 +484,11 @@ function renderDashboard(){
   const sp=document.getElementById('net-sparkline');sp.innerHTML='';const hist=data.netWorthHistory||[];const mx=Math.max(...hist,1);
   hist.forEach(v=>{const b=document.createElement('div');b.className='sparkline-bar';b.style.height=(v/mx*100)+'%';sp.appendChild(b)});
   // Drill-downs
-  const incByCat={};data.transactions.filter(t=>t.type==='income').forEach(t=>{incByCat[t.category]=(incByCat[t.category]||0)+t.amount});
+  const incByCat={};mTx.filter(t=>t.type==='income').forEach(t=>{incByCat[t.category]=(incByCat[t.category]||0)+t.amount});
   const totInc=Object.values(incByCat).reduce((s,v)=>s+v,0);
   document.getElementById('income-sources').textContent='\u2191 '+Object.keys(incByCat).length+' sources';
   document.getElementById('income-breakdown').innerHTML=Object.entries(incByCat).sort((a,b)=>b[1]-a[1]).map(e=>{const c=categories.find(x=>x.id===e[0]);return'<div class="drill-row"><span class="drill-row-label">'+((c||{}).icon||'')+' '+((c||{}).name||e[0])+'</span><span class="drill-row-value">'+fmt(e[1])+'</span></div>'}).join('');
-  const expByCat={};data.transactions.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.category]=(expByCat[t.category]||0)+t.amount});
+  const expByCat={};mTx.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.category]=(expByCat[t.category]||0)+t.amount});
   const totExp=Object.values(expByCat).reduce((s,v)=>s+v,0);
   document.getElementById('expense-change').textContent='\u2193 '+fmt(totExp)+' total';
   document.getElementById('expense-breakdown').innerHTML=Object.entries(expByCat).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>{const c=categories.find(x=>x.id===e[0]);return'<div class="drill-row"><span class="drill-row-label">'+((c||{}).icon||'')+' '+((c||{}).name||e[0])+'</span><span class="drill-row-value">'+fmt(e[1])+'</span></div>'}).join('');
@@ -480,7 +502,8 @@ function renderDashboard(){
 
 function renderDonut(){
   const canvas=document.getElementById('donut-chart');const ctx=canvas.getContext('2d');canvas.width=120;canvas.height=120;
-  const byC={};data.transactions.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
+  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const byC={};data.transactions.filter(t=>t.type==='expense'&&t.date&&t.date.startsWith(mo)).forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
   const sorted=Object.entries(byC).sort((a,b)=>b[1]-a[1]).slice(0,6);const total=sorted.reduce((s,e)=>s+e[1],0);
   if(!total)return;ctx.clearRect(0,0,120,120);let sa=-Math.PI/2;
   const leg=document.getElementById('donut-legend');leg.innerHTML='';
@@ -511,7 +534,8 @@ function renderAccounts(){
 }
 
 function renderBudgets(){
-  const byC={};data.transactions.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});let tb=0,ts=0;
+  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const byC={};data.transactions.filter(t=>t.type==='expense'&&t.date&&t.date.startsWith(mo)).forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});let tb=0,ts=0;
   document.getElementById('budget-list').innerHTML=data.budgets.map(b=>{const c=categories.find(x=>x.id===b.category);const sp=byC[b.category]||0;const p=Math.min(100,Math.round(sp/b.limit*100));const col=p>90?'var(--cp-danger)':p>70?'var(--cp-warning)':'var(--cp-success)';tb+=b.limit;ts+=sp;return'<div class="budget-item"><div class="budget-icon" style="background:'+(c?c.color+'20':'var(--cp-surface-soft)')+'">'+((c||{}).icon||'\u{1F4CB}')+'</div><div class="budget-info"><div class="budget-name">'+((c||{}).name||b.category)+'</div><div class="budget-spent">'+fmt(sp)+' / '+fmt(b.limit)+'</div></div><div class="budget-bar"><div class="progress-bar"><div class="progress-fill" style="width:'+p+'%;background:'+col+'"></div></div></div></div>'}).join('');
   document.getElementById('total-budget').textContent=fmt(tb);document.getElementById('total-spent').textContent=fmt(ts);document.getElementById('total-remaining').textContent=fmt(Math.max(0,tb-ts));
 }
@@ -588,7 +612,9 @@ function renderRecurring(){
 }
 
 function renderInsights(){
-  const exp=data.transactions.filter(t=>t.type==='expense');const inc=data.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
+  const mTx=data.transactions.filter(t=>t.date&&t.date.startsWith(mo));
+  const exp=mTx.filter(t=>t.type==='expense');const inc=mTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totE=exp.reduce((s,t)=>s+t.amount,0);const byC={};exp.forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
   const top=Object.entries(byC).sort((a,b)=>b[1]-a[1])[0];const topCat=categories.find(c=>c.id===(top||[])[0]);
   const sr=inc>0?Math.round(((inc-totE)/inc)*100):0;
@@ -682,7 +708,7 @@ function editSplit(id){const s=data.splits.find(x=>String(x.id)===String(id));if
   setTimeout(()=>{const payers=s.payers||[{name:s.paidBy,amount:s.total}];payers.forEach(p=>{const inp=document.querySelector('.payer-amt[data-name="'+p.name+'"]');if(inp)inp.value=p.amount})},50)}
 
 function exportData(){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='financeflow-'+today()+'.json';a.click()}
-function importData(){const f=document.getElementById('import-file').files[0];if(!f){alert('Select file');return}const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.transactions){data=d;saveData();closeModal();renderPage(getCurrentPage());alert('Done!')}else alert('Invalid')}catch{alert('Error')}};r.readAsText(f)}
+function importData(){const f=document.getElementById('import-file').files[0];if(!f){alert('Select file');return}const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.transactions){data=sanitizeData(d);saveData();closeModal();renderPage(getCurrentPage());alert('Done!')}else alert('Invalid')}catch{alert('Error')}};r.readAsText(f)}
 
 // === Firebase Cloud Sync ===
 function initFirebase(){
@@ -705,7 +731,7 @@ function firebaseSignOut(){if(!confirm('Sign out? Data will reset to defaults.')
 function getDbRef(){if(!firebaseUser||!firebaseDb)return null;return firebaseDb.ref('users/'+firebaseUser.uid+'/data')}
 function startFirebaseListener(){
   const ref=getDbRef();if(!ref||_firebaseListenerActive)return;_firebaseListenerActive=true;
-  ref.on('value',snap=>{const cloud=snap.val();if(cloud&&cloud.transactions){_skipFirebaseSync=true;data=cloud;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}});
+  ref.on('value',snap=>{const cloud=snap.val();if(cloud&&cloud.transactions){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}});
 }
 function firebasePush(){
   const ref=getDbRef();if(!ref)return;
@@ -714,7 +740,7 @@ function firebasePush(){
 }
 function firebasePull(){
   const ref=getDbRef();if(!ref){alert('Not signed in');return}
-  ref.get().then(snap=>{const cloud=snap.val();if(cloud&&cloud.transactions){_skipFirebaseSync=true;data=cloud;saveData();_skipFirebaseSync=false;renderPage(getCurrentPage());alert('\u2705 Pulled latest data!')}else alert('No data on cloud yet.')}).catch(e=>alert('Pull error: '+e.message));
+  ref.get().then(snap=>{const cloud=snap.val();if(cloud&&cloud.transactions){_skipFirebaseSync=true;data=sanitizeData(cloud);saveData();_skipFirebaseSync=false;renderPage(getCurrentPage());alert('\u2705 Pulled latest data!')}else alert('No data on cloud yet.')}).catch(e=>alert('Pull error: '+e.message));
 }
 
 function openModal(type){
@@ -737,7 +763,7 @@ function renderPage(p){switch(p){case'dashboard':renderDashboard();break;case'tr
 
 (function init(){
   document.getElementById('filter-category').innerHTML='<option value="all">All</option>'+categories.map(c=>'<option value="'+c.id+'">'+c.icon+' '+c.name+'</option>').join('');
-  autoGenerateRecurring();renderDashboard();
+  autoGenerateRecurring();updateNetWorthHistory();renderDashboard();
   // Initialize Firebase if config exists
   initFirebase();
 })();
