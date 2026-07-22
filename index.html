@@ -98,6 +98,8 @@ tr:hover td{background:var(--cp-accent-soft)}
 .quick-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
 .quick-input{flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--cp-border);border-radius:24px;background:var(--cp-surface);color:var(--cp-text);font-size:.8125rem;font-family:inherit}
 .quick-input:focus{outline:none;border-color:var(--cp-accent);box-shadow:0 0 0 3px var(--cp-accent-soft)}
+.period-select{padding:7px 12px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-surface);color:var(--cp-text);font-size:.75rem;font-weight:600;cursor:pointer;font-family:inherit;min-width:120px}
+.period-select:focus{outline:none;border-color:var(--cp-accent)}
 .quick-input::placeholder{color:var(--cp-text-muted)}
 .templates-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .template-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:1px solid var(--cp-border);background:var(--cp-surface-soft);color:var(--cp-text);font-size:.6875rem;font-weight:500;cursor:pointer;transition:all .15s}
@@ -156,7 +158,7 @@ tr:hover td{background:var(--cp-accent-soft)}
 
   <main class="main">
     <div class="page active" id="page-dashboard">
-      <div class="page-header"><h1 id="greeting">Good afternoon!</h1><p>Your financial overview for <span id="current-month"></span></p></div>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1 id="greeting">Good afternoon!</h1><p>Your financial overview for <span id="current-month"></span></p></div><select id="period-select" class="period-select" onchange="renderDashboard()"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="3-months">Last 3 Months</option><option value="6-months">Last 6 Months</option><option value="this-year">This Year</option><option value="all">All Time</option></select></div>
       <div class="stats-grid">
         <div class="card card-clickable" onclick="navigateTo('accounts')">
           <div class="card-title">Net Worth</div>
@@ -165,13 +167,13 @@ tr:hover td{background:var(--cp-accent-soft)}
           <div class="sparkline" id="net-sparkline"></div>
         </div>
         <div class="card card-clickable" onclick="toggleDrill('income-drill',this)">
-          <div class="card-title">Monthly Income</div>
+          <div class="card-title" id="income-card-title">Income</div>
           <div class="card-value" id="monthly-income">&#8377;0</div>
           <div class="card-change positive" id="income-sources">&mdash;</div>
           <div class="drill-down" id="income-drill"><div id="income-breakdown"></div><div class="drill-action" onclick="event.stopPropagation();openModal('transaction');setTimeout(()=>document.getElementById('tx-type').value='income',50)">+ Add Income</div></div>
         </div>
         <div class="card card-clickable" onclick="toggleDrill('expense-drill',this)">
-          <div class="card-title">Monthly Expenses</div>
+          <div class="card-title" id="expense-card-title">Expenses</div>
           <div class="card-value" id="monthly-expenses">&#8377;0</div>
           <div class="card-change negative" id="expense-change">&mdash;</div>
           <div class="drill-down" id="expense-drill"><div id="expense-breakdown"></div><div class="drill-action" onclick="event.stopPropagation();openModal('transaction')">+ Add Expense</div></div>
@@ -197,7 +199,7 @@ tr:hover td{background:var(--cp-accent-soft)}
     <div class="page" id="page-transactions">
       <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Transactions</h1><p>All income & expenses</p></div><button class="btn btn-primary" onclick="openModal('transaction')">+ Add</button></div>
       <div class="quick-bar"><input type="text" class="quick-input" id="quick-entry-tx" placeholder='Quick: "uber 250" or paste bank SMS' onkeydown="if(event.key==='Enter')quickAddFromTx()"><button class="btn btn-primary btn-sm" onclick="quickAddFromTx()">&#9889;</button></div>
-      <div class="card" style="margin-bottom:16px;padding:12px"><div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="search-tx" placeholder="Search..." style="flex:1;min-width:140px;padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" oninput="renderTransactions()"><select id="filter-type" style="padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" onchange="renderTransactions()"><option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option></select><select id="filter-category" style="padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" onchange="renderTransactions()"><option value="all">All Categories</option></select></div></div>
+      <div class="card" style="margin-bottom:16px;padding:12px"><div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="search-tx" placeholder="Search..." style="flex:1;min-width:140px;padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" oninput="renderTransactions()"><select id="tx-period-select" class="period-select" onchange="renderTransactions()"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="3-months">Last 3 Months</option><option value="6-months">Last 6 Months</option><option value="this-year">This Year</option><option value="all">All Time</option></select><select id="filter-type" style="padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" onchange="renderTransactions()"><option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option></select><select id="filter-category" style="padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" onchange="renderTransactions()"><option value="all">All Categories</option></select></div></div>
       <div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Account</th><th>Type</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="all-transactions"></tbody></table></div></div>
     </div>
 
@@ -213,7 +215,7 @@ tr:hover td{background:var(--cp-accent-soft)}
     </div>
 
     <div class="page" id="page-budgets">
-      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Budgets</h1><p>Monthly limits</p></div><button class="btn btn-primary" onclick="openModal('budget')">+ Set Budget</button></div>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Budgets</h1><p>Monthly limits</p></div><div style="display:flex;gap:8px;align-items:center"><select id="budget-period-select" class="period-select" onchange="renderBudgets()"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="3-months">Last 3 Months</option><option value="6-months">Last 6 Months</option></select><button class="btn btn-primary" onclick="openModal('budget')">+ Set Budget</button></div></div>
       <div class="stats-grid"><div class="card"><div class="card-title">Total Budget</div><div class="card-value" id="total-budget">&#8377;0</div></div><div class="card"><div class="card-title">Spent</div><div class="card-value" id="total-spent">&#8377;0</div></div><div class="card"><div class="card-title">Remaining</div><div class="card-value" id="total-remaining">&#8377;0</div></div></div>
       <div class="card"><div id="budget-list"></div></div>
     </div>
@@ -252,7 +254,7 @@ tr:hover td{background:var(--cp-accent-soft)}
     </div>
 
     <div class="page" id="page-insights">
-      <div class="page-header"><h1>Insights & Trends</h1><p>AI-powered analysis</p></div>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Insights & Trends</h1><p>AI-powered analysis</p></div><select id="insights-period-select" class="period-select" onchange="renderInsights()"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="3-months">Last 3 Months</option><option value="6-months">Last 6 Months</option><option value="this-year">This Year</option><option value="all">All Time</option></select></div>
       <div id="insights-list"></div>
       <div class="card full-width" style="margin-top:16px"><div class="card-header"><div class="card-title">Category Trends (6 Months)</div></div><canvas id="trends-chart" style="width:100%;height:200px"></canvas></div>
       <div class="card full-width"><div class="card-header"><div class="card-title">Monthly Savings</div></div><div id="savings-chart-container" style="width:100%;height:160px"><canvas id="savings-chart" style="width:100%;height:100%"></canvas></div></div>
@@ -389,6 +391,33 @@ function fmt(n){if(n==null||isNaN(n))return'\u20B90';const sign=n<0?'-':'';const
 function fmtDate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
 function today(){return new Date().toISOString().split('T')[0]}
 
+function getDateRange(period){
+  const now=new Date();const y=now.getFullYear();const m=now.getMonth();
+  switch(period){
+    case'this-month':return{start:y+'-'+String(m+1).padStart(2,'0')+'-01',label:now.toLocaleDateString('en-IN',{month:'long',year:'numeric'})};
+    case'last-month':{const d=new Date(y,m-1,1);return{start:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01',end:y+'-'+String(m+1).padStart(2,'0')+'-01',label:d.toLocaleDateString('en-IN',{month:'long',year:'numeric'})}};
+    case'3-months':{const d=new Date(y,m-2,1);return{start:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01',label:'Last 3 Months'}};
+    case'6-months':{const d=new Date(y,m-5,1);return{start:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01',label:'Last 6 Months'}};
+    case'this-year':return{start:y+'-01-01',label:'Year '+y};
+    case'all':return{start:'2000-01-01',label:'All Time'};
+    default:if(period&&period.match(/^\d{4}-\d{2}$/)){const d=new Date(period+'-01');return{start:period+'-01',end:period.replace(/-\d{2}$/,m2=>{const nm=parseInt(m2.slice(1))+1;return nm>12?'':(nm<10?'-0':'-')+nm})+'-01',label:d.toLocaleDateString('en-IN',{month:'long',year:'numeric'})}}
+    return{start:y+'-'+String(m+1).padStart(2,'0')+'-01',label:'This Month'};
+  }
+}
+function filterByPeriod(txns,period){
+  const r=getDateRange(period);
+  return txns.filter(t=>t.date&&t.date>=r.start&&(!r.end||t.date<r.end));
+}
+function getPeriodMonthCount(period){
+  switch(period){case'this-month':case'last-month':return 1;case'3-months':return 3;case'6-months':return 6;case'this-year':return new Date().getMonth()+1;case'all':return Math.max(1,new Set(data.transactions.map(t=>(t.date||'').slice(0,7))).size);default:return 1}
+}
+function populatePeriodSelects(){
+  const months=new Set();data.transactions.forEach(t=>{if(t.date)months.add(t.date.slice(0,7))});
+  const sorted=[...months].sort().reverse();
+  const extra=sorted.filter(m=>{const now=new Date();const cur=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');const prev=new Date(now.getFullYear(),now.getMonth()-1,1);const prevM=prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0');return m!==cur&&m!==prevM}).map(m=>{const d=new Date(m+'-01');return'<option value="'+m+'">'+d.toLocaleDateString('en-IN',{month:'short',year:'numeric'})+'</option>'}).join('');
+  document.querySelectorAll('.period-select').forEach(sel=>{const v=sel.value;const base=sel.innerHTML;if(!sel.dataset.init){sel.dataset.init='1';sel.dataset.base=base}sel.innerHTML=sel.dataset.base+(extra?'<option disabled>──────</option>'+extra:'');sel.value=v||'this-month'});
+}
+
 function parseQuickEntry(text){
   text=text.trim();if(!text)return null;
   const sms=text.match(/(?:debited|spent|paid|sent)\s*(?:rs\.?|inr|\u20B9)?\s*([\d,]+)/i)||text.match(/(?:rs\.?|inr|\u20B9)\s*([\d,]+)\s*(?:debited|spent)/i);
@@ -467,25 +496,31 @@ function detectAnomalies(){
 function toggleDrill(id,el){const p=document.getElementById(id);const o=p.classList.contains('open');document.querySelectorAll('.drill-down').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.card-clickable').forEach(c=>c.classList.remove('expanded'));if(!o){p.classList.add('open');el.classList.add('expanded')}}
 
 function renderDashboard(){
-  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-  const mTx=data.transactions.filter(t=>t.date&&t.date.startsWith(mo));
+  populatePeriodSelects();
+  const period=document.getElementById('period-select').value;
+  const range=getDateRange(period);
+  const mTx=filterByPeriod(data.transactions,period);
   const income=mTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const expenses=mTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const months=getPeriodMonthCount(period);
+  const periodLabel=period==='this-month'||period==='last-month'?'':'avg/mo';
   document.getElementById('net-worth').textContent=fmt(calcNetWorth());
   document.getElementById('nw-change').textContent='Click to manage accounts';
-  document.getElementById('monthly-income').textContent=fmt(income);
-  document.getElementById('monthly-expenses').textContent=fmt(expenses);
+  document.getElementById('monthly-income').textContent=fmt(income)+(months>1?' <span style="font-size:.5rem;color:var(--cp-text-muted)">('+fmt(Math.round(income/months))+' avg/mo)</span>':'');
+  document.getElementById('monthly-income').innerHTML=fmt(income)+(months>1?'<div style="font-size:.5rem;color:var(--cp-text-muted);font-weight:400;margin-top:2px">'+fmt(Math.round(income/months))+' avg/mo</div>':'');
+  document.getElementById('monthly-expenses').innerHTML=fmt(expenses)+(months>1?'<div style="font-size:.5rem;color:var(--cp-text-muted);font-weight:400;margin-top:2px">'+fmt(Math.round(expenses/months))+' avg/mo</div>':'');
+  document.getElementById('income-card-title').textContent=range.label+' Income';
+  document.getElementById('expense-card-title').textContent=range.label+' Expenses';
   const sr=income>0?Math.round(((income-expenses)/income)*100):0;
   document.getElementById('savings-rate').textContent=sr+'%';
   document.getElementById('streak-badge').textContent='\u{1F525} '+(data.noSpendStreak||0)+'-day streak';
   const h=new Date().getHours();
   document.getElementById('greeting').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+' \u{1F44B}';
-  document.getElementById('current-month').textContent=new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  document.getElementById('current-month').textContent=range.label;
   const sp=document.getElementById('net-sparkline');sp.innerHTML='';const hist=data.netWorthHistory||[];const mx=Math.max(...hist,1);
   hist.forEach(v=>{const b=document.createElement('div');b.className='sparkline-bar';b.style.height=(v/mx*100)+'%';sp.appendChild(b)});
   // Drill-downs
   const incByCat={};mTx.filter(t=>t.type==='income').forEach(t=>{incByCat[t.category]=(incByCat[t.category]||0)+t.amount});
-  const totInc=Object.values(incByCat).reduce((s,v)=>s+v,0);
   document.getElementById('income-sources').textContent='\u2191 '+Object.keys(incByCat).length+' sources';
   document.getElementById('income-breakdown').innerHTML=Object.entries(incByCat).sort((a,b)=>b[1]-a[1]).map(e=>{const c=categories.find(x=>x.id===e[0]);return'<div class="drill-row"><span class="drill-row-label">'+((c||{}).icon||'')+' '+((c||{}).name||e[0])+'</span><span class="drill-row-value">'+fmt(e[1])+'</span></div>'}).join('');
   const expByCat={};mTx.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.category]=(expByCat[t.category]||0)+t.amount});
@@ -496,14 +531,15 @@ function renderDashboard(){
   // Anomaly
   document.getElementById('anomaly-alerts').innerHTML=detectAnomalies().map(a=>'<div class="anomaly-alert"><span class="alert-icon">'+a.icon+'</span><div class="alert-text">'+a.text+'</div></div>').join('');
   // Recent
-  document.getElementById('recent-transactions').innerHTML=data.transactions.slice(0,5).map(t=>{const c=categories.find(x=>x.id===t.category);const acc=(data.accounts||[]).find(a=>a.id===t.account);return'<tr><td>'+fmtDate(t.date)+'</td><td>'+((c||{}).icon||'')+' '+t.desc+'</td><td style="font-size:.6875rem">'+((c||{}).name||t.category)+'</td><td style="font-size:.6875rem">'+((acc||{}).name||'\u2014')+'</td><td style="color:'+(t.type==='income'?'var(--cp-success)':'var(--cp-danger)')+';font-weight:600">'+(t.type==='income'?'+':'-')+fmt(t.amount)+'</td><td><button class="btn-ghost" onclick="editTransaction('+t.id+')">\u270F\uFE0F</button></td></tr>'}).join('');
+  document.getElementById('recent-transactions').innerHTML=mTx.slice(0,5).map(t=>{const c=categories.find(x=>x.id===t.category);const acc=(data.accounts||[]).find(a=>a.id===t.account);return'<tr><td>'+fmtDate(t.date)+'</td><td>'+((c||{}).icon||'')+' '+t.desc+'</td><td style="font-size:.6875rem">'+((c||{}).name||t.category)+'</td><td style="font-size:.6875rem">'+((acc||{}).name||'\u2014')+'</td><td style="color:'+(t.type==='income'?'var(--cp-success)':'var(--cp-danger)')+';font-weight:600">'+(t.type==='income'?'+':'-')+fmt(t.amount)+'</td><td><button class="btn-ghost" onclick="editTransaction('+t.id+')">\u270F\uFE0F</button></td></tr>'}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--cp-text-muted);padding:20px">No transactions for this period</td></tr>';
   renderDonut();renderHealthScore();
 }
 
 function renderDonut(){
   const canvas=document.getElementById('donut-chart');const ctx=canvas.getContext('2d');canvas.width=120;canvas.height=120;
-  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-  const byC={};data.transactions.filter(t=>t.type==='expense'&&t.date&&t.date.startsWith(mo)).forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
+  const period=document.getElementById('period-select').value;
+  const pTx=filterByPeriod(data.transactions,period);
+  const byC={};pTx.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
   const sorted=Object.entries(byC).sort((a,b)=>b[1]-a[1]).slice(0,6);const total=sorted.reduce((s,e)=>s+e[1],0);
   if(!total)return;ctx.clearRect(0,0,120,120);let sa=-Math.PI/2;
   const leg=document.getElementById('donut-legend');leg.innerHTML='';
@@ -518,7 +554,9 @@ function renderHealthScore(){
 
 function renderTransactions(){
   const s=(document.getElementById('search-tx').value||'').toLowerCase(),tf=document.getElementById('filter-type').value,cf=document.getElementById('filter-category').value;
-  let f=data.transactions;if(s)f=f.filter(t=>t.desc.toLowerCase().includes(s));if(tf!=='all')f=f.filter(t=>t.type===tf);if(cf!=='all')f=f.filter(t=>t.category===cf);
+  const period=document.getElementById('tx-period-select').value;
+  let f=filterByPeriod(data.transactions,period);
+  if(s)f=f.filter(t=>t.desc.toLowerCase().includes(s));if(tf!=='all')f=f.filter(t=>t.type===tf);if(cf!=='all')f=f.filter(t=>t.category===cf);
   document.getElementById('all-transactions').innerHTML=f.map(t=>{const c=categories.find(x=>x.id===t.category);const acc=(data.accounts||[]).find(a=>a.id===t.account);return'<tr><td>'+fmtDate(t.date)+'</td><td>'+((c||{}).icon||'')+' '+t.desc+'</td><td style="font-size:.6875rem">'+((c||{}).name||t.category)+'</td><td style="font-size:.6875rem">'+((acc||{}).name||'\u2014')+'</td><td><span class="badge badge-'+t.type+'">'+t.type+'</span></td><td style="font-weight:600;color:'+(t.type==='income'?'var(--cp-success)':'var(--cp-danger)')+'">'+(t.type==='income'?'+':'-')+fmt(t.amount)+'</td><td style="white-space:nowrap"><button class="btn-ghost" onclick="editTransaction('+t.id+')">\u270F\uFE0F</button><button class="btn-ghost" onclick="deleteTransaction('+t.id+')" style="color:var(--cp-danger)">\u2715</button></td></tr>'}).join('');
 }
 
@@ -534,9 +572,11 @@ function renderAccounts(){
 }
 
 function renderBudgets(){
-  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-  const byC={};data.transactions.filter(t=>t.type==='expense'&&t.date&&t.date.startsWith(mo)).forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});let tb=0,ts=0;
-  document.getElementById('budget-list').innerHTML=data.budgets.map(b=>{const c=categories.find(x=>x.id===b.category);const sp=byC[b.category]||0;const p=Math.min(100,Math.round(sp/b.limit*100));const col=p>90?'var(--cp-danger)':p>70?'var(--cp-warning)':'var(--cp-success)';tb+=b.limit;ts+=sp;return'<div class="budget-item"><div class="budget-icon" style="background:'+(c?c.color+'20':'var(--cp-surface-soft)')+'">'+((c||{}).icon||'\u{1F4CB}')+'</div><div class="budget-info"><div class="budget-name">'+((c||{}).name||b.category)+'</div><div class="budget-spent">'+fmt(sp)+' / '+fmt(b.limit)+'</div></div><div class="budget-bar"><div class="progress-bar"><div class="progress-fill" style="width:'+p+'%;background:'+col+'"></div></div></div></div>'}).join('');
+  const period=document.getElementById('budget-period-select').value;
+  const months=getPeriodMonthCount(period);
+  const pTx=filterByPeriod(data.transactions,period);
+  const byC={};pTx.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});let tb=0,ts=0;
+  document.getElementById('budget-list').innerHTML=data.budgets.map(b=>{const c=categories.find(x=>x.id===b.category);const sp=byC[b.category]||0;const scaledLimit=b.limit*months;const p=Math.min(100,Math.round(sp/scaledLimit*100));const col=p>90?'var(--cp-danger)':p>70?'var(--cp-warning)':'var(--cp-success)';tb+=scaledLimit;ts+=sp;return'<div class="budget-item"><div class="budget-icon" style="background:'+(c?c.color+'20':'var(--cp-surface-soft)')+'">'+((c||{}).icon||'\u{1F4CB}')+'</div><div class="budget-info"><div class="budget-name">'+((c||{}).name||b.category)+(months>1?' <span style="font-size:.5625rem;color:var(--cp-text-muted)">('+months+'mo)</span>':'')+'</div><div class="budget-spent">'+fmt(sp)+' / '+fmt(scaledLimit)+'</div></div><div class="budget-bar"><div class="progress-bar"><div class="progress-fill" style="width:'+p+'%;background:'+col+'"></div></div></div></div>'}).join('');
   document.getElementById('total-budget').textContent=fmt(tb);document.getElementById('total-spent').textContent=fmt(ts);document.getElementById('total-remaining').textContent=fmt(Math.max(0,tb-ts));
 }
 
@@ -612,18 +652,21 @@ function renderRecurring(){
 }
 
 function renderInsights(){
-  const mo=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-  const mTx=data.transactions.filter(t=>t.date&&t.date.startsWith(mo));
+  const period=document.getElementById('insights-period-select').value;
+  const range=getDateRange(period);
+  const mTx=filterByPeriod(data.transactions,period);
+  const months=getPeriodMonthCount(period);
   const exp=mTx.filter(t=>t.type==='expense');const inc=mTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totE=exp.reduce((s,t)=>s+t.amount,0);const byC={};exp.forEach(t=>{byC[t.category]=(byC[t.category]||0)+t.amount});
   const top=Object.entries(byC).sort((a,b)=>b[1]-a[1])[0];const topCat=categories.find(c=>c.id===(top||[])[0]);
   const sr=inc>0?Math.round(((inc-totE)/inc)*100):0;
+  const avgExpPerMonth=months>0?Math.round(totE/months):0;
   const daysInMonth=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
-  const dayOfMonth=new Date().getDate();const predicted=dayOfMonth>0?Math.round(totE/dayOfMonth*daysInMonth):0;
+  const dayOfMonth=new Date().getDate();const predicted=period==='this-month'&&dayOfMonth>0?Math.round(totE/dayOfMonth*daysInMonth):avgExpPerMonth;
   const insights=[
-    {icon:'\u{1F4CA}',text:'Top spending: <strong>'+((topCat||{}).name||'N/A')+'</strong> at '+fmt((top||[0,0])[1])+'.'},
-    {icon:'\u{1F4AA}',text:'Savings rate: <strong>'+sr+'%</strong>. '+(sr>=30?'Excellent!':sr>=20?'Good.':'Below 20%.')},
-    {icon:'\u{1F52E}',text:'<strong>Prediction:</strong> You\'ll spend '+fmt(predicted)+' by month-end at this rate.'},
+    {icon:'\u{1F4CA}',text:'<strong>'+range.label+'</strong> \u2014 Top spending: <strong>'+((topCat||{}).name||'N/A')+'</strong> at '+fmt((top||[0,0])[1])+'.'+(months>1?' ('+fmt(Math.round((top||[0,0])[1]/months))+'/mo avg)':'')},
+    {icon:'\u{1F4AA}',text:'Savings rate: <strong>'+sr+'%</strong>. '+(sr>=30?'Excellent!':sr>=20?'Good.':'Below 20%.')+(months>1?' \u2022 Saved '+fmt(inc-totE)+' over '+months+' months':'')},
+    {icon:'\u{1F52E}',text:period==='this-month'?'<strong>Prediction:</strong> You\'ll spend '+fmt(predicted)+' by month-end at this rate.':'<strong>Average:</strong> '+fmt(avgExpPerMonth)+'/month in expenses over '+months+' months.'},
     {icon:'\u{1F3C6}',text:'Health Score: <strong>'+calcHealthScore()+'/100</strong>. '+(calcHealthScore()>=70?'Great!':'Room to improve.')},
     {icon:'\u{1F4B3}',text:'Total debt: <strong>'+fmt((data.debts||[]).reduce((s,d)=>s+(d.principal-d.paid),0))+'</strong>. Monthly EMIs: '+fmt((data.debts||[]).reduce((s,d)=>s+d.emi,0))+'.'},
   ];
