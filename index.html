@@ -368,11 +368,14 @@ function getDefaultData(){return{
 }}
 
 function getEmptyData(){return{transactions:[],accounts:[],budgets:[],goals:[],recurring:[],debts:[],splits:[],templates:[],lastRecurringRun:null,noSpendStreak:0,netWorthHistory:[]}}
+function toArray(v){if(Array.isArray(v))return v;if(v&&typeof v==='object')return Object.values(v);return[]}
 function sanitizeData(d){
   if(!d)return getDefaultData();
-  if(!d.transactions)d.transactions=[];if(!d.accounts)d.accounts=[];if(!d.budgets)d.budgets=[];
-  if(!d.goals)d.goals=[];if(!d.recurring)d.recurring=[];if(!d.debts)d.debts=[];
-  if(!d.splits)d.splits=[];if(!d.templates)d.templates=[];if(!d.netWorthHistory)d.netWorthHistory=[];
+  d.transactions=toArray(d.transactions);d.accounts=toArray(d.accounts);d.budgets=toArray(d.budgets);
+  d.goals=toArray(d.goals);d.recurring=toArray(d.recurring);d.debts=toArray(d.debts);
+  d.splits=toArray(d.splits);d.templates=toArray(d.templates);d.netWorthHistory=toArray(d.netWorthHistory);
+  // Fix nested arrays inside splits (members, payers)
+  d.splits.forEach(s=>{s.members=toArray(s.members);if(s.payers)s.payers=toArray(s.payers)});
   return d;
 }
 function loadData(){try{const r=localStorage.getItem(STORAGE_KEY);if(r){return sanitizeData(JSON.parse(r))}return getDefaultData()}catch{return getDefaultData()}}
@@ -770,11 +773,23 @@ async function firebaseSignIn(){
   if(!firebaseApp)initFirebase();
   try{const provider=new firebase.auth.GoogleAuthProvider();await firebase.auth().signInWithPopup(provider);closeModal();navigateTo('dashboard')}catch(e){if(e.code!=='auth/popup-closed-by-user')alert('Sign-in error: '+e.message)}
 }
-function firebaseSignOut(){if(!confirm('Sign out? Data will reset to defaults.'))return;firebase.auth().signOut();firebaseUser=null;_firebaseListenerActive=false;_skipFirebaseSync=true;data=getDefaultData();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());updateAuthUI()}
+function firebaseSignOut(){if(!confirm('Sign out? Data will reset to defaults.'))return;
+  // Detach old listener before signing out
+  const ref=getDbRef();if(ref)ref.off();
+  firebase.auth().signOut();firebaseUser=null;_firebaseListenerActive=false;_skipFirebaseSync=true;data=getDefaultData();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());updateAuthUI()}
 function getDbRef(){if(!firebaseUser||!firebaseDb)return null;return firebaseDb.ref('users/'+firebaseUser.uid+'/data')}
 function startFirebaseListener(){
-  const ref=getDbRef();if(!ref||_firebaseListenerActive)return;_firebaseListenerActive=true;
-  ref.on('value',snap=>{const cloud=snap.val();if(cloud&&cloud.transactions){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}});
+  const ref=getDbRef();if(!ref)return;
+  // Always detach old listener, then re-attach
+  if(_firebaseListenerActive){ref.off();_firebaseListenerActive=false}
+  _firebaseListenerActive=true;
+  // Do an explicit pull first to guarantee data loads
+  ref.get().then(snap=>{
+    const cloud=snap.val();
+    if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Synced: '+new Date().toLocaleString()}
+  }).catch(e=>console.warn('Initial pull failed:',e));
+  // Then attach live listener for future changes
+  ref.on('value',snap=>{const cloud=snap.val();if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}});
 }
 function firebasePush(){
   const ref=getDbRef();if(!ref)return;
@@ -783,7 +798,7 @@ function firebasePush(){
 }
 function firebasePull(){
   const ref=getDbRef();if(!ref){alert('Not signed in');return}
-  ref.get().then(snap=>{const cloud=snap.val();if(cloud&&cloud.transactions){_skipFirebaseSync=true;data=sanitizeData(cloud);saveData();_skipFirebaseSync=false;renderPage(getCurrentPage());alert('\u2705 Pulled latest data!')}else alert('No data on cloud yet.')}).catch(e=>alert('Pull error: '+e.message));
+  ref.get().then(snap=>{const cloud=snap.val();if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);saveData();_skipFirebaseSync=false;renderPage(getCurrentPage());alert('\u2705 Pulled latest data!')}else alert('No data on cloud yet.')}).catch(e=>alert('Pull error: '+e.message));
 }
 
 function openModal(type){
