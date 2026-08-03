@@ -4,6 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>FinanceFlow — Smart Money Tracker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='40' y2='40' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23ff8fa8'/%3E%3Cstop offset='.55' stop-color='%23e8446f'/%3E%3Cstop offset='1' stop-color='%23a81846'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='40' height='40' rx='11.5' fill='url(%23g)'/%3E%3Cpath d='M10.5 27.5 16.5 20 22 24.5 29 14.5' stroke='%23fff' stroke-width='3.1' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='29' cy='14.5' r='3.1' fill='%23fff'/%3E%3C/svg%3E" />
+<meta name="theme-color" content="#0f0f14" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="FinanceFlow" />
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -18,7 +23,10 @@ body{font-family:"Segoe UI",Aptos,Calibri,-apple-system,BlinkMacSystemFont,sans-
 .app{display:flex;min-height:100dvh}
 .sidebar{width:240px;background:var(--cp-surface);border-right:1px solid var(--cp-border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto}
 .main{margin-left:240px;flex:1;padding:24px;width:calc(100% - 240px)}
-.logo{font-size:1.125rem;font-weight:700;color:var(--cp-accent);padding:8px 12px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.logo{font-size:1.125rem;font-weight:700;color:var(--cp-accent);padding:8px 12px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;flex-shrink:0;border-radius:9px;box-shadow:0 3px 10px rgba(177,31,75,.32)}
+.logo-word{color:var(--cp-text);letter-spacing:-.015em}
+.logo-word span{color:var(--cp-accent)}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:.625rem;cursor:pointer;color:var(--cp-text-muted);font-size:.8125rem;font-weight:500;transition:all .15s;border:none;background:none;width:100%;text-align:left}
 .nav-item:hover{background:var(--cp-accent-soft);color:var(--cp-text)}
 .nav-item.active{background:var(--cp-accent-soft);color:var(--cp-accent);font-weight:600;box-shadow:inset 3px 0 0 var(--cp-accent)}
@@ -104,6 +112,30 @@ tr:hover td{background:var(--cp-accent-soft)}
 .bill-amt{font-size:.75rem;font-weight:600}
 .mini-bar{height:5px;border-radius:3px;background:var(--cp-border);overflow:hidden;margin-top:6px}
 .mini-bar span{display:block;height:100%;border-radius:3px}
+/* --- FIRE --- */
+.fire-tag{font-size:.625rem;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(245,158,11,.15);color:var(--cp-warning);white-space:nowrap}
+.fire-tag.mid{background:var(--cp-accent-soft);color:var(--cp-accent)}
+.fire-tag.done{background:rgba(22,163,74,.15);color:var(--cp-success)}
+.fire-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:4px 0 10px}
+.fire-stat-label{font-size:.625rem;color:var(--cp-text-soft);text-transform:uppercase;letter-spacing:.04em}
+.fire-stat-value{font-size:1.375rem;font-weight:700;margin:2px 0 1px;line-height:1.2}
+.fire-stat-sub{font-size:.625rem;color:var(--cp-text-muted);line-height:1.4}
+.fire-note{font-size:.5625rem;color:var(--cp-text-muted);margin-top:7px;line-height:1.5}
+.fire-sub-h{font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--cp-text-soft);margin:14px 0 8px}
+.fire-hero{background:var(--cp-accent-soft);border-left:3px solid var(--cp-accent);border-radius:.625rem;padding:11px 13px;font-size:.8125rem;line-height:1.55}
+.fire-hero-sub{font-size:.6875rem;color:var(--cp-text-soft);margin-top:6px;line-height:1.55}
+.fire-sens{font-size:.6875rem;color:var(--cp-text-soft);background:var(--cp-surface-soft);border-radius:.625rem;padding:9px 12px;margin-top:10px;line-height:1.55}
+.mile-row{margin-bottom:11px}
+.mile-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.6875rem}
+.mile-name{font-weight:600}
+.mile-amt{font-weight:700;color:var(--cp-text-soft);white-space:nowrap}
+.mile-note{font-size:.5625rem;color:var(--cp-text-muted);margin-top:3px}
+.fire-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px 14px}
+.fire-row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.6875rem;color:var(--cp-text-soft)}
+.fire-row i{font-style:normal;color:var(--cp-text-muted);font-size:.5625rem}
+.fire-row-wide{grid-column:1/-1;flex-wrap:wrap}
+.fire-row-wide input[type=range]{flex:1;min-width:140px;accent-color:var(--cp-accent)}
+.fire-in{width:110px;padding:5px 8px;border:1px solid var(--cp-border);border-radius:.5rem;background:var(--cp-bg);color:var(--cp-text);font-size:.6875rem;text-align:right}
 /* --- heatmap --- */
 .heat-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
 .heat-cell{aspect-ratio:1;border-radius:4px;background:#161c28;display:flex;align-items:center;justify-content:center;font-size:.5rem;color:var(--cp-text-soft);cursor:default}
@@ -157,7 +189,13 @@ tr:hover td{background:var(--cp-accent-soft)}
 .page{display:none}.page.active{display:block}
 .mobile-toggle{display:none;position:fixed;top:12px;right:12px;z-index:200;background:var(--cp-surface);border:1px solid var(--cp-border);border-radius:.625rem;padding:8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}.mobile-overlay.active{display:block}
-@media(max-width:768px){.sidebar{transform:translateX(-100%);width:260px}.sidebar.open{transform:translateX(0)}.main{margin-left:0;padding:16px;padding-top:56px;width:100%}.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.mobile-toggle{display:flex!important}}
+.more-toggle{display:none}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);width:260px}.sidebar.open{transform:translateX(0)}.main{margin-left:0;padding:16px;padding-top:56px;width:100%}.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.mobile-toggle{display:flex!important}
+.more-toggle{display:flex;width:100%;align-items:center;gap:8px;background:var(--cp-surface);border:1px solid var(--cp-border);color:var(--cp-text-soft);border-radius:.75rem;padding:12px 14px;font-size:.75rem;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:14px}
+.more-toggle .mt-hint{margin-left:auto;color:var(--cp-text-muted);font-weight:500}
+.more-toggle svg{width:14px;height:14px;flex-shrink:0;transition:transform .2s}
+.more-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+#more-tiles{display:none}#more-tiles.show{display:grid}}
 @media(max-width:400px){.stats-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
 .sparkline{display:flex;align-items:flex-end;gap:2px;height:40px;margin-top:8px}
 .sparkline-bar{flex:1;background:var(--cp-accent);border-radius:2px 2px 0 0;opacity:.4;transition:opacity .2s}
@@ -211,7 +249,7 @@ tr:hover td{background:var(--cp-accent-soft)}
   <button class="mobile-toggle" onclick="toggleSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
 
   <aside class="sidebar" id="sidebar">
-    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>FinanceFlow</div>
+    <div class="logo"><svg class="logo-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><defs><linearGradient id="ff-mark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#ff8fa8"/><stop offset=".55" stop-color="#e8446f"/><stop offset="1" stop-color="#a81846"/></linearGradient></defs><rect width="40" height="40" rx="11.5" fill="url(#ff-mark)"/><path d="M10.5 27.5 16.5 20 22 24.5 29 14.5" stroke="#fff" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/><circle cx="29" cy="14.5" r="3.1" fill="#fff"/></svg><span class="logo-word">Finance<span>Flow</span></span></div>
     <button class="nav-item active" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
     <button class="nav-item" data-page="transactions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20m5-17l-5-5-5 5m10 12l-5 5-5-5"/></svg>Transactions</button>
     <button class="nav-item" data-page="accounts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 7h20M2 7v10a2 2 0 002 2h16a2 2 0 002-2V7M6 12h.01M10 12h4"/></svg>Accounts</button>
@@ -259,7 +297,8 @@ tr:hover td{background:var(--cp-accent-soft)}
           <div class="drill-down" id="savings-drill"><div id="savings-breakdown"></div></div>
         </div>
       </div>
-      <div class="stats-grid" style="margin-top:0">
+      <button class="more-toggle" id="more-toggle" onclick="toggleMoreTiles()" aria-expanded="false" aria-controls="more-tiles"><span class="mt-label">More insights</span><span class="mt-hint" id="more-hint"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="stats-grid" id="more-tiles" style="margin-top:0">
         <div class="card card-clickable" onclick="toggleDrill('sts-drill',this)">
           <div class="card-title">Safe to Spend</div>
           <div class="card-value" id="safe-to-spend">&#8377;0</div>
@@ -322,7 +361,12 @@ tr:hover td{background:var(--cp-accent-soft)}
     </div>
 
     <div class="page" id="page-goals">
-      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Goals</h1><p>Track your targets</p></div><button class="btn btn-primary" onclick="openModal('goal')">+ New Goal</button></div>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Goals</h1><p>Your targets &#8212; and the big one, financial independence</p></div><button class="btn btn-primary" onclick="openModal('goal')">+ New Goal</button></div>
+      <div class="card full-width card-clickable" style="margin-bottom:20px" onclick="toggleDrill('fire-drill',this)">
+        <div class="card-header"><div class="card-title">Financial Independence &#183; your FIRE number</div><div class="fire-tag" id="fire-tag"></div></div>
+        <div id="fire-head"></div>
+        <div class="drill-down" id="fire-drill"><div id="fire-detail"></div></div>
+      </div>
       <div class="stats-grid" id="goals-list"></div>
     </div>
 
@@ -618,6 +662,14 @@ function sanitizeData(d){
   d.settings=(d.settings&&typeof d.settings==='object')?d.settings:{};
   d.settings.onboarded=!!d.settings.onboarded;
   d.settings.rollover=!!d.settings.rollover;
+  // Firebase drops nulls, so a missing key here just means "auto-derive" - which is the
+  // same thing an explicit null means. fireCfg() treats both identically.
+  d.settings.fire=(d.settings.fire&&typeof d.settings.fire==='object'&&!Array.isArray(d.settings.fire))?d.settings.fire:{};
+  ['annualExpenses','corpus','monthly','swr','realReturn','age','targetAge'].forEach(k=>{
+    const v=d.settings.fire[k];
+    if(v==null||v===''){d.settings.fire[k]=null;return}
+    const n=Number(v);d.settings.fire[k]=isFinite(n)?n:null;
+  });
   // Fix nested arrays inside splits (members, payers)
   d.splits.forEach(s=>{s.members=toArray(s.members);if(s.payers)s.payers=toArray(s.payers)});
   // Transactions: normalise every field the balance engine depends on.
@@ -822,23 +874,36 @@ function detectAnomalies(){
 
 function toggleDrill(id,el){const p=document.getElementById(id);const o=p.classList.contains('open');document.querySelectorAll('.drill-down').forEach(d=>d.classList.remove('open'));document.querySelectorAll('.card-clickable').forEach(c=>c.classList.remove('expanded'));if(!o){p.classList.add('open');el.classList.add('expanded')}}
 
+function toggleMoreTiles(){
+  const g=document.getElementById('more-tiles'),b=document.getElementById('more-toggle');
+  if(!g||!b)return;
+  const open=!g.classList.contains('show');
+  g.classList.toggle('show',open);
+  b.setAttribute('aria-expanded',open?'true':'false');
+  const lbl=b.querySelector('.mt-label');if(lbl)lbl.textContent=open?'Fewer insights':'More insights';
+  const hint=b.querySelector('.mt-hint');if(hint)hint.style.display=open?'none':'';
+}
+
 // === Dashboard intelligence ===
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const LIQUID_TYPES=['bank','savings','wallet','cash'];
 function liquidAssets(){return toArray(data.accounts).filter(a=>LIQUID_TYPES.includes(a.type)).reduce((s,a)=>s+(Number(a.balance)||0),0)}
 function daysInMonthOf(y,m){return new Date(y,m+1,0).getDate()}
-function avgMonthlyExpense(n){
+function avgMonthlyExpense(n){return avgMonthlyFlow('expense',n)}
+function avgMonthlyIncome(n){return avgMonthlyFlow('income',n)}
+function avgMonthlyFlow(kind,n){
   n=n||3;
   const now=new Date();const keys=[];
   for(let i=1;i<=n;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);keys.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))}
   let tot=0,seen=0;
   keys.forEach(k=>{
-    const s=toArray(data.transactions).filter(t=>t.type==='expense'&&t.date&&t.date.startsWith(k)).reduce((a,t)=>a+(Number(t.amount)||0),0);
+    const s=toArray(data.transactions).filter(t=>t.type===kind&&t.date&&t.date.startsWith(k)).reduce((a,t)=>a+(Number(t.amount)||0),0);
     if(s>0){tot+=s;seen++}
   });
   if(seen)return tot/seen;
   // No history yet - fall back to this month so the number isn't zero on day one.
   const mk=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-  const cur=toArray(data.transactions).filter(t=>t.type==='expense'&&t.date&&t.date.startsWith(mk)).reduce((a,t)=>a+(Number(t.amount)||0),0);
+  const cur=toArray(data.transactions).filter(t=>t.type===kind&&t.date&&t.date.startsWith(mk)).reduce((a,t)=>a+(Number(t.amount)||0),0);
   const dayFrac=Math.max(1,now.getDate())/daysInMonthOf(now.getFullYear(),now.getMonth());
   return cur>0?cur/dayFrac:0;
 }
@@ -892,7 +957,10 @@ function safeToSpend(){
   const goalSip=monthlyGoalCommitment()*(daysLeft/dim);
   const emi=monthlyDebtCommitment()*(daysLeft/dim);
   const pot=liquid-bills-goalSip-emi;
-  return {pot:Math.max(0,pot),raw:pot,liquid,bills,goalSip,emi,daysLeft,perDay:Math.max(0,pot)/daysLeft,spent,dim};
+  const perDay=Math.max(0,pot)/daysLeft;
+  // What the remaining pot works out to if this pace ran for a whole month - the monthly
+  // framing people actually budget in, rather than a daily allowance.
+  return {pot:Math.max(0,pot),raw:pot,liquid,bills,goalSip,emi,daysLeft,perDay,monthlyEquiv:perDay*dim,spent,dim,month:MONTH_NAMES[now.getMonth()]};
 }
 function runway(){
   const liquid=liquidAssets();const burn=avgMonthlyExpense(3);
@@ -912,6 +980,122 @@ function forecastEndOfMonth(){
   const bills=upcomingBills(daysLeft).reduce((s,b)=>s+b.amount,0);
   const projExp=exp+projExtra+bills;
   return {inc,exp,projExp,projExtra,bills,daysLeft,net:inc-projExp,dim};
+}
+
+// === Financial independence (FIRE) ===
+// Everything here is in today's rupees: the return figure is a REAL (post-inflation) rate,
+// so we never have to inflate the target. That keeps the numbers legible.
+const FIRE_DEFAULTS={swr:4,realReturn:6,age:30,targetAge:60};
+function fireCfg(){
+  const f=(data.settings&&typeof data.settings.fire==='object'&&data.settings.fire)||{};
+  const num=(v,d)=>{const n=Number(v);return (v===''||v==null||!isFinite(n))?d:n};
+  return {
+    // null/undefined means "auto-derive" - we only store a number once the user overrides.
+    annualExpenses:(f.annualExpenses==null||f.annualExpenses==='')?null:num(f.annualExpenses,null),
+    corpus:(f.corpus==null||f.corpus==='')?null:num(f.corpus,null),
+    monthly:(f.monthly==null||f.monthly==='')?null:num(f.monthly,null),
+    swr:Math.min(5,Math.max(3,num(f.swr,FIRE_DEFAULTS.swr))),
+    realReturn:Math.min(15,Math.max(0,num(f.realReturn,FIRE_DEFAULTS.realReturn))),
+    age:Math.min(90,Math.max(15,Math.round(num(f.age,FIRE_DEFAULTS.age)))),
+    targetAge:Math.min(90,Math.max(20,Math.round(num(f.targetAge,FIRE_DEFAULTS.targetAge))))
+  };
+}
+function setFire(key,val){
+  data.settings=data.settings||{};
+  data.settings.fire=(typeof data.settings.fire==='object'&&data.settings.fire)||{};
+  data.settings.fire[key]=(val===''||val==null)?null:Number(val);
+  saveData();renderFire();
+}
+function resetFireField(key){
+  data.settings=data.settings||{};
+  data.settings.fire=(typeof data.settings.fire==='object'&&data.settings.fire)||{};
+  data.settings.fire[key]=null;
+  saveData();renderFire();
+  toast('Back to the auto-derived figure.','ok');
+}
+// A goal counts as the retirement goal if it's named like one - its money is FIRE money,
+// so it must NOT be subtracted as "earmarked elsewhere".
+function isRetirementGoal(g){return /retire|fire|financial independ|freedom|corpus/i.test(String(g&&g.name||''))}
+function earmarkedForOtherGoals(){
+  return toArray(data.goals).filter(g=>!isRetirementGoal(g))
+    .reduce((s,g)=>s+toArray(g.sources).reduce((a,x)=>a+(Number(x.amount)||0),0),0);
+}
+function fireAuto(){
+  // Invested corpus = everything that isn't liquid. The emergency fund lives in a bank or
+  // savings account, so LIQUID_TYPES already keeps Runway and FIRE from claiming the same rupee.
+  const invested=toArray(data.accounts).filter(a=>!LIQUID_TYPES.includes(a.type)).reduce((s,a)=>s+(Number(a.balance)||0),0);
+  const earmarked=earmarkedForOtherGoals();
+  const inc=avgMonthlyIncome(6),exp=avgMonthlyExpense(6);
+  const retirementSip=toArray(data.goals).filter(isRetirementGoal)
+    .reduce((s,g)=>s+toArray(g.sources).reduce((a,x)=>a+(Number(x.monthly)||0),0),0);
+  return {
+    invested,earmarked,
+    corpus:Math.max(0,invested-Math.min(invested,earmarked)),
+    annualExpenses:exp*12,
+    monthlyIncome:inc,
+    monthlyExpense:exp,
+    // What you could realistically invest each month: your actual surplus, or at minimum
+    // whatever you've already committed to a retirement goal.
+    monthly:Math.max(0,Math.max(inc-exp,retirementSip)),
+    retirementSip
+  };
+}
+// Months to reach `target` from `corpus` adding `monthly`, compounding at a real annual rate.
+function fiMonths(corpus,monthly,annualRealPct,target){
+  corpus=Math.max(0,Number(corpus)||0);monthly=Math.max(0,Number(monthly)||0);
+  target=Number(target)||0;
+  if(target<=0)return null;
+  if(corpus>=target)return 0;
+  const r=(Number(annualRealPct)||0)/100/12;
+  if(r<=0)return monthly>0?(target-corpus)/monthly:null;
+  const den=corpus*r+monthly;
+  if(den<=0)return null;
+  const ratio=(target*r+monthly)/den;
+  if(ratio<=1)return 0;
+  const n=Math.log(ratio)/Math.log(1+r);
+  // Past a century it isn't a plan, it's a rounding error. Say so instead of printing a number.
+  if(!isFinite(n)||n<=0||n>1200)return null;
+  return n;
+}
+function fireStats(){
+  const c=fireCfg(),a=fireAuto();
+  const annualExpenses=c.annualExpenses!=null?c.annualExpenses:a.annualExpenses;
+  const corpus=c.corpus!=null?c.corpus:a.corpus;
+  const monthly=c.monthly!=null?c.monthly:a.monthly;
+  const target=annualExpenses>0?annualExpenses/(c.swr/100):0;
+  const months=fiMonths(corpus,monthly,c.realReturn,target);
+  const years=months==null?null:months/12;
+  const yearsToTarget=Math.max(0,c.targetAge-c.age);
+  const coast=target>0?(yearsToTarget<=0?target:target/Math.pow(1+c.realReturn/100,yearsToTarget)):0;
+  // Sensitivity: what does one more 10k a month actually buy you?
+  const bumped=fiMonths(corpus,monthly+10000,c.realReturn,target);
+  const saved=(months!=null&&bumped!=null)?months-bumped:null;
+  return {
+    cfg:c,auto:a,annualExpenses,corpus,monthly,target,months,years,coast,yearsToTarget,
+    savedByExtra10k:saved,
+    pct:target>0?Math.min(100,corpus/target*100):0,
+    ready:annualExpenses>0,
+    autoAnnual:c.annualExpenses==null,autoCorpus:c.corpus==null,autoMonthly:c.monthly==null
+  };
+}
+// Years to FI at a hypothetical savings rate. Raising the rate lifts contributions AND
+// lowers the target at the same time - which is exactly why it dominates everything else.
+function yearsAtSavingsRate(rate,st){
+  const inc=st.auto.monthlyIncome;
+  if(inc<=0||rate<=0||rate>=1)return null;
+  const target=inc*12*(1-rate)/(st.cfg.swr/100);
+  const m=fiMonths(st.corpus,inc*rate,st.cfg.realReturn,target);
+  return m==null?null:m/12;
+}
+function fireMilestones(st){
+  const c=st.cfg;
+  return [
+    {name:'Barista FIRE',amt:st.target*0.5,note:'half the number \u2014 a part-time job covers the rest'},
+    {name:'Coast FIRE',amt:st.coast,note:'stop investing today, still retire at '+c.targetAge},
+    {name:'Lean FIRE',amt:st.annualExpenses*0.7*25,note:'25\u00D7 a trimmed-down budget'},
+    {name:'Full FIRE',amt:st.target,note:'your expenses, covered forever'},
+    {name:'Fat FIRE',amt:st.target*1.5,note:'the same life with room to spare'}
+  ].filter(m=>m.amt>0).sort((x,y)=>x.amt-y.amt);
 }
 
 function renderDashboard(){
@@ -956,20 +1140,137 @@ function renderDashboard(){
   renderDonut();renderHealthScore();
 }
 
+function fireWhen(years,c){
+  const age=Math.round(c.age+years),yr=new Date().getFullYear()+Math.round(years);
+  return 'age '+age+', around '+yr;
+}
+function fireNumInput(id,val,step,min,max){
+  return '<input type="number" class="fire-in" id="'+id+'" value="'+(val===''?'':val)+'" step="'+step+'"'+(min!=null?' min="'+min+'"':'')+(max!=null?' max="'+max+'"':'')+'>';
+}
+function renderFire(){
+  const st=fireStats(),c=st.cfg;
+  const head=document.getElementById('fire-head'),det=document.getElementById('fire-detail'),tag=document.getElementById('fire-tag');
+  if(!head)return;
+  if(!st.ready){
+    tag.textContent='';
+    head.innerHTML='<div class="src-empty" style="text-align:left;padding:6px 0">Log a month or two of expenses and we\u2019ll work out the number that buys you the option to stop working. It\u2019s built from what you actually spend, not what you earn.</div>';
+    det.innerHTML='<div class="src-empty" style="text-align:left">Nothing to show yet \u2014 add some expenses, or set your annual spending by hand once there\u2019s data to compare against.</div>';
+    return;
+  }
+  tag.textContent=Math.round(st.pct)+'% there';
+  tag.className='fire-tag '+(st.pct>=100?'done':st.pct>=50?'mid':'');
+  const whenTxt=st.months==null
+    ?(st.monthly<=0?'Not on track \u2014 you aren\u2019t investing anything each month':'More than a lifetime at this rate')
+    :(st.months===0?'Already there \u2014 you\u2019re financially independent today':fireWhen(st.years,c));
+  head.innerHTML=
+    '<div class="fire-grid">'+
+      '<div class="fire-stat"><div class="fire-stat-label">Your FIRE number</div><div class="fire-stat-value">'+fmt(Math.round(st.target))+'</div><div class="fire-stat-sub">'+fmt(Math.round(st.annualExpenses))+'/yr at a '+c.swr+'% withdrawal rate</div></div>'+
+      '<div class="fire-stat"><div class="fire-stat-label">Invested so far</div><div class="fire-stat-value">'+fmt(Math.round(st.corpus))+'</div><div class="fire-stat-sub">'+st.pct.toFixed(1)+'% of the way</div></div>'+
+      '<div class="fire-stat"><div class="fire-stat-label">Time to freedom</div><div class="fire-stat-value" style="color:'+(st.months==null?'var(--cp-danger)':st.years<=10?'var(--cp-success)':'var(--cp-text)')+'">'+(st.months==null?'\u2014':st.months===0?'Now':st.years.toFixed(1)+' yrs')+'</div><div class="fire-stat-sub">'+esc(whenTxt)+'</div></div>'+
+    '</div>'+
+    '<div class="mini-bar" style="height:8px"><span style="width:'+st.pct+'%;background:'+(st.pct>=100?'var(--cp-success)':st.pct>=50?'var(--cp-accent)':'var(--cp-warning)')+'"></span></div>'+
+    '<div class="fire-note">All figures in today\u2019s rupees \u2014 the '+c.realReturn+'% return is already net of inflation.</div>';
+
+  // Hero insight: savings rate beats income and returns, and it isn't close.
+  let hero='';
+  const inc=st.auto.monthlyIncome;
+  if(inc>0){
+    const cur=Math.max(0,Math.min(0.95,(inc-st.auto.monthlyExpense)/inc));
+    const alt=cur<0.5?0.5:Math.min(0.75,cur+0.15);
+    const yNow=yearsAtSavingsRate(cur,st),yAlt=yearsAtSavingsRate(alt,st);
+    if(yNow!=null&&yAlt!=null&&Math.abs(yAlt-yNow)>0.2){
+      hero='<div class="fire-hero">At a <b>'+Math.round(cur*100)+'% savings rate</b> you\u2019re about <b>'+Math.round(yNow)+' years</b> out. At <b>'+Math.round(alt*100)+'%</b>, it\u2019s <b>'+Math.round(yAlt)+'</b>.'+
+        '<div class="fire-hero-sub">That gap isn\u2019t about earning more or picking better funds. Saving a bigger share does two things at once \u2014 it feeds the corpus faster <i>and</i> shrinks the number you\u2019re chasing, because you need less to live on.</div></div>';
+    }else if(yNow!=null&&cur>=0.6){
+      hero='<div class="fire-hero">You\u2019re saving <b>'+Math.round(cur*100)+'%</b> of what you earn. That\u2019s the whole game \u2014 at this rate you\u2019re roughly <b>'+Math.round(yNow)+' years</b> out.</div>';
+    }
+  }
+
+  const miles=fireMilestones(st);
+  const mileHtml=miles.map(m=>{
+    const p=m.amt>0?Math.min(100,st.corpus/m.amt*100):0,hit=st.corpus>=m.amt;
+    return '<div class="mile-row"><div class="mile-top"><span class="mile-name">'+(hit?'\u2713 ':'')+esc(m.name)+'</span><span class="mile-amt">'+fmt(Math.round(m.amt))+'</span></div>'+
+      '<div class="mini-bar"><span style="width:'+p+'%;background:'+(hit?'var(--cp-success)':'var(--cp-accent)')+'"></span></div>'+
+      '<div class="mile-note">'+esc(m.note)+'</div></div>';
+  }).join('');
+
+  const sens=st.savedByExtra10k!=null&&st.savedByExtra10k>0.5
+    ?'<div class="fire-sens">Every extra <b>'+fmt(10000)+'/month</b> invested pulls financial independence forward by <b>'+fmtMonths(st.savedByExtra10k)+'</b>.</div>'
+    :(st.monthly<=0?'<div class="fire-sens">You\u2019re not investing anything monthly right now. Starting with even '+fmt(10000)+'/month would put a finish line on the board.</div>':'');
+
+  det.innerHTML=
+    hero+
+    '<div class="fire-sub-h">Milestones</div>'+mileHtml+
+    sens+
+    '<div class="fire-sub-h">Assumptions \u2014 change any of these</div>'+
+    '<div class="fire-inputs" onclick="event.stopPropagation()">'+
+      '<label class="fire-row"><span>Annual expenses'+(st.autoAnnual?' <i>(auto)</i>':'')+'</span>'+fireNumInput('fire-annual',Math.round(st.annualExpenses),1000,0)+'</label>'+
+      '<label class="fire-row"><span>Invested corpus'+(st.autoCorpus?' <i>(auto)</i>':'')+'</span>'+fireNumInput('fire-corpus',Math.round(st.corpus),1000,0)+'</label>'+
+      '<label class="fire-row"><span>Investing per month'+(st.autoMonthly?' <i>(auto)</i>':'')+'</span>'+fireNumInput('fire-monthly',Math.round(st.monthly),500,0)+'</label>'+
+      '<label class="fire-row"><span>Your age</span>'+fireNumInput('fire-age',c.age,1,15,90)+'</label>'+
+      '<label class="fire-row"><span>Target age</span>'+fireNumInput('fire-target-age',c.targetAge,1,20,90)+'</label>'+
+      '<label class="fire-row"><span>Real return, after inflation</span>'+fireNumInput('fire-return',c.realReturn,0.5,0,15)+'</label>'+
+      '<div class="fire-row fire-row-wide"><span>Safe withdrawal rate <b id="fire-swr-val">'+c.swr+'%</b></span>'+
+        '<input type="range" id="fire-swr" min="3" max="5" step="0.25" value="'+c.swr+'" oninput="document.getElementById(\'fire-swr-val\').textContent=this.value+\'%\'" onchange="setFire(\'swr\',this.value)"></div>'+
+      '<div class="fire-note" style="grid-column:1/-1">The 4% rule comes from US market history. For India, <b>3.5%</b> is the more honest planning number \u2014 it costs you a few extra years, but it\u2019s a far smaller regret than running out at 70.</div>'+
+      '<div class="drill-actions" style="grid-column:1/-1"><button class="drill-action" onclick="applyFireInputs()">Apply</button><button class="drill-action" onclick="resetFire()">Reset to auto</button></div>'+
+    '</div>'+
+    '<div class="fire-sub-h">How we got the corpus</div>'+
+    '<div class="drill-row"><span class="drill-row-label">Non-liquid accounts (investments)</span><span class="drill-row-value">'+fmt(Math.round(st.auto.invested))+'</span></div>'+
+    '<div class="drill-row"><span class="drill-row-label">Less: earmarked for other goals</span><span class="drill-row-value" style="color:var(--cp-danger)">-'+fmt(Math.round(Math.min(st.auto.invested,st.auto.earmarked)))+'</span></div>'+
+    '<div class="drill-row"><span class="drill-row-label"><b>Counted towards FIRE</b></span><span class="drill-row-value"><b>'+fmt(Math.round(st.auto.corpus))+'</b></span></div>'+
+    '<div class="src-empty" style="text-align:left;padding:8px 0 0">Your emergency fund sits in a bank or savings account, so it\u2019s deliberately left out here \u2014 it belongs to Runway, not to FIRE. Money already promised to another goal is subtracted for the same reason.</div>';
+}
+function applyFireInputs(){
+  const g=id=>{const el=document.getElementById(id);return el?el.value:''};
+  const a=fireAuto(),c=fireCfg();
+  const put=(key,val,autoVal)=>{
+    const n=Number(val);
+    // Leaving a field at exactly the auto figure keeps it on auto, so it stays live as data changes.
+    if(val===''||!isFinite(n)){setFireQuiet(key,null);return}
+    setFireQuiet(key,Math.abs(n-autoVal)<1?null:n);
+  };
+  put('annualExpenses',g('fire-annual'),Math.round(a.annualExpenses));
+  put('corpus',g('fire-corpus'),Math.round(a.corpus));
+  put('monthly',g('fire-monthly'),Math.round(a.monthly));
+  const age=Number(g('fire-age')),tage=Number(g('fire-target-age')),ret=Number(g('fire-return'));
+  if(isFinite(age)&&age>0)setFireQuiet('age',age);
+  if(isFinite(tage)&&tage>0)setFireQuiet('targetAge',tage);
+  if(isFinite(ret)&&ret>=0)setFireQuiet('realReturn',ret);
+  saveData();renderFire();
+  toast('Updated. Fields left at the auto figure stay auto.','ok');
+}
+function setFireQuiet(key,val){
+  data.settings=data.settings||{};
+  data.settings.fire=(typeof data.settings.fire==='object'&&data.settings.fire)||{};
+  data.settings.fire[key]=(val===''||val==null)?null:Number(val);
+}
+function resetFire(){
+  data.settings=data.settings||{};
+  data.settings.fire={};
+  saveData();renderFire();
+  toast('Assumptions reset \u2014 everything is derived from your data again.','ok');
+}
+
 function renderSmartTiles(){
   // Safe to Spend
   const s=safeToSpend();
   document.getElementById('safe-to-spend').textContent=fmt(Math.round(s.pot));
   const stsSub=document.getElementById('sts-sub');
-  stsSub.textContent=fmt(Math.round(s.perDay))+'/day for '+s.daysLeft+' more day'+(s.daysLeft===1?'':'s');
+  stsSub.textContent=s.raw>0?'free for the rest of '+s.month:'over-committed this '+s.month;
   stsSub.className='card-change '+(s.raw<=0?'negative':'positive');
+  const mh=document.getElementById('more-hint');
+  if(mh)mh.textContent='Safe to spend '+fmt(Math.round(s.pot));
   document.getElementById('sts-breakdown').innerHTML=
     '<div class="drill-row"><span class="drill-row-label">\u{1F4B5} Liquid cash</span><span class="drill-row-value">'+fmt(Math.round(s.liquid))+'</span></div>'+
     '<div class="drill-row"><span class="drill-row-label">\u{1F4C5} Bills still due this month</span><span class="drill-row-value" style="color:var(--cp-danger)">-'+fmt(Math.round(s.bills))+'</span></div>'+
     '<div class="drill-row"><span class="drill-row-label">\u{1F3AF} Goal contributions (pro-rated)</span><span class="drill-row-value" style="color:var(--cp-danger)">-'+fmt(Math.round(s.goalSip))+'</span></div>'+
     '<div class="drill-row"><span class="drill-row-label">\u{1F3E6} EMIs (pro-rated)</span><span class="drill-row-value" style="color:var(--cp-danger)">-'+fmt(Math.round(s.emi))+'</span></div>'+
     '<div class="drill-row"><span class="drill-row-label"><b>Genuinely free to spend</b></span><span class="drill-row-value"><b style="color:'+(s.raw>0?'var(--cp-success)':'var(--cp-danger)')+'">'+fmt(Math.round(s.raw))+'</b></span></div>'+
-    '<div class="src-empty" style="text-align:left;padding:8px 0 0">'+(s.raw<=0?'Your commitments already exceed your liquid cash this month. Something has to give \u2014 push a goal contribution or trim a bill.':'This is what\u2019s left after everything you\u2019ve already promised. Spend it guilt-free.')+'</div>';
+    '<div class="drill-row" style="border-top:1px solid var(--cp-border);margin-top:6px;padding-top:8px"><span class="drill-row-label">At this pace, per month</span><span class="drill-row-value">'+fmt(Math.round(s.monthlyEquiv))+'</span></div>'+
+    '<div class="drill-row"><span class="drill-row-label">Works out to, per day</span><span class="drill-row-value">'+fmt(Math.round(s.perDay))+'</span></div>'+
+    '<div class="src-empty" style="text-align:left;padding:8px 0 0">'+(s.raw<=0?'Your commitments already exceed your liquid cash this month. Something has to give \u2014 push a goal contribution or trim a bill.':'This is what\u2019s left after everything you\u2019ve already promised. Spend it guilt-free.')+'</div>'+
+    '<div class="src-empty" style="text-align:left;padding:4px 0 0;color:var(--cp-text-muted)">This is a <b>this-month</b> number. Emergency Runway answers a different question: how long you\u2019d last with no income at all.</div>';
 
   // Runway
   const r=runway();
@@ -1234,15 +1535,18 @@ function requiredMonthly(saved,target,annualPct,months){
 }
 
 function renderGoals(){
+  renderFire();
   const el=document.getElementById('goals-list');
   if(!data.goals.length){el.innerHTML='<div class="card" style="grid-column:1/-1;text-align:center;padding:30px 20px;color:var(--cp-text-soft);font-size:.75rem">No goals yet. Create one to start tracking how you\u2019ll get there.</div>';return}
   el.innerHTML=data.goals.map(g=>{
     const saved=goalSaved(g);g.current=saved;
     const target=Number(g.target)||0;
     const pct=target>0?Math.min(100,Math.round(saved/target*100)):0;
-    const dl=Math.max(0,Math.ceil((new Date(g.date)-new Date())/86400000));
-    const mn=dl>0?Math.round((target-saved)/(dl/30)):0;
-    const pc=g.priority==='high'?'var(--cp-danger)':g.priority==='medium'?'var(--cp-warning)':'var(--cp-success)';
+    const dlRaw=g.date?Math.ceil((new Date(g.date+'T00:00:00')-new Date())/86400000):null;
+    const dl=(dlRaw!=null&&isFinite(dlRaw))?Math.max(0,dlRaw):null;
+    const mn=(dl!=null&&dl>0)?Math.max(0,Math.round((target-saved)/(dl/30))):0;
+    const prio=g.priority||'medium';
+    const pc=prio==='high'?'var(--cp-danger)':prio==='medium'?'var(--cp-warning)':'var(--cp-success)';
     const srcs=goalSources(g);
     const gid=String(g.id).replace(/'/g,'');
     // Allocation split by instrument type
@@ -1277,7 +1581,7 @@ function renderGoals(){
     }else{
       const hit=new Date();hit.setMonth(hit.getMonth()+pr.months);
       const hitLabel=hit.toLocaleDateString('en-IN',{month:'short',year:'numeric'});
-      const dlMonths=Math.round(dl/30.44);
+      const dlMonths=dl!=null?Math.round(dl/30.44):0;
       const early=dlMonths-pr.months;
       const blend=goalBlendedReturn(g),mo=goalMonthly(g);
       let verdict;
@@ -1289,11 +1593,11 @@ function renderGoals(){
       projHtml='<div class="proj-box">'+verdict+'<br>Investing <strong>'+fmt(Math.round(mo))+'/mo</strong> at a blended <strong>'+blend.toFixed(1)+'% p.a.</strong>'+gap+'</div>';
     }
     return'<div class="card card-clickable" onclick="toggleDrill(\'goal-drill-'+gid+'\',this)">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px"><span style="font-weight:700;font-size:.875rem">'+esc(g.name)+'</span><span style="font-size:.5625rem;padding:2px 6px;border-radius:6px;background:'+pc+'20;color:'+pc+';font-weight:600;flex-shrink:0">'+g.priority+'</span></div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px"><span style="font-weight:700;font-size:.875rem">'+esc(g.name)+'</span><span style="font-size:.5625rem;padding:2px 7px;border-radius:6px;background:var(--cp-surface-soft);border:1px solid '+pc+';color:'+pc+';font-weight:600;flex-shrink:0;text-transform:capitalize">'+esc(prio)+'</span></div>'+
       '<div style="font-size:1.25rem;font-weight:700;color:var(--cp-accent)">'+pct+'%</div>'+
       '<div class="progress-bar" style="height:8px;margin:8px 0"><div class="progress-fill" style="width:'+pct+'%;background:var(--cp-accent)"></div></div>'+
       '<div style="font-size:.6875rem;color:var(--cp-text-muted)">'+fmt(saved)+' / '+fmt(target)+'</div>'+
-      '<div style="font-size:.625rem;color:var(--cp-text-soft);margin-top:4px">\u{1F4C5} '+dl+'d left \u2022 '+fmt(mn)+'/mo needed</div>'+
+      '<div style="font-size:.625rem;color:var(--cp-text-soft);margin-top:4px">\u{1F4C5} '+(dl==null?'No deadline set':(dl>60?fmtMonths(Math.round(dl/30.44))+' left':dl+'d left'))+(dl!=null&&mn>0?' \u2022 '+fmt(mn)+'/mo needed':'')+'</div>'+
       '<div class="goal-hint">\u{1F50D} Click to see how you\u2019re funding this \u2022 '+srcs.length+' source'+(srcs.length===1?'':'s')+'</div>'+
       '<div class="drill-down" id="goal-drill-'+gid+'">'+
         allocHtml+rowsHtml+projHtml+
@@ -1305,7 +1609,7 @@ function renderGoals(){
 }
 
 function renderDebts(){
-  const debts=data.debts||[];
+  const debts=(data.debts||[]).map(d=>Object.assign({},d,{principal:Number(d.principal)||0,paid:Number(d.paid)||0,emi:Number(d.emi)||0,rate:Number(d.rate)||0,type:d.type||'emi'}));
   const totalDebt=debts.reduce((s,d)=>s+(d.principal-d.paid),0);
   const monthlyEmi=debts.reduce((s,d)=>s+d.emi,0);
   let maxMonths=0;debts.forEach(d=>{const rem=d.principal-d.paid;const m=d.emi>0?Math.ceil(rem/d.emi):0;if(m>maxMonths)maxMonths=m});
@@ -1315,11 +1619,13 @@ function renderDebts(){
   document.getElementById('debt-free-date').textContent=maxMonths>0?freeDate.toLocaleDateString('en-IN',{month:'short',year:'numeric'}):'Debt Free! \u{1F389}';
   const typeColors={emi:'#6366f1',credit_card:'#ef4444',personal:'#f59e0b'};
   const typeLabels={emi:'EMI/Loan',credit_card:'Credit Card',personal:'Personal'};
-  document.getElementById('debts-list').innerHTML=debts.map(d=>{const rem=d.principal-d.paid;const pct=Math.round(d.paid/d.principal*100);const ml=d.emi>0?Math.ceil(rem/d.emi):0;return'<div class="debt-card"><div class="debt-header"><span class="debt-name">'+d.name+'</span><span class="debt-type" style="background:'+(typeColors[d.type]||'#6b7280')+'20;color:'+(typeColors[d.type]||'#6b7280')+'">'+(typeLabels[d.type]||d.type)+'</span></div><div class="progress-bar" style="height:8px;margin:8px 0"><div class="progress-fill" style="width:'+pct+'%;background:var(--cp-success)"></div></div><div style="font-size:.6875rem;color:var(--cp-text-muted)">'+pct+'% paid \u2014 '+fmt(d.paid)+' / '+fmt(d.principal)+'</div><div class="debt-stats"><div class="debt-stat"><div class="debt-stat-label">Remaining</div><div class="debt-stat-value" style="color:var(--cp-danger)">'+fmt(rem)+'</div></div><div class="debt-stat"><div class="debt-stat-label">EMI</div><div class="debt-stat-value">'+fmt(d.emi)+'</div></div><div class="debt-stat"><div class="debt-stat-label">Rate</div><div class="debt-stat-value">'+d.rate+'%</div></div><div class="debt-stat"><div class="debt-stat-label">Months Left</div><div class="debt-stat-value">'+ml+'</div></div></div><div style="margin-top:10px;display:flex;gap:6px"><button class="btn btn-sm btn-primary" onclick="payDebt(\''+d.id+'\')">\u{1F4B0} Pay EMI</button><button class="btn btn-sm" onclick="editDebt(\''+d.id+'\')">\u270F\uFE0F Edit</button><button class="btn btn-sm" onclick="deleteDebt(\''+d.id+'\')" style="color:var(--cp-danger)">Remove</button></div></div>'}).join('')||'<div class="card" style="text-align:center;padding:40px;color:var(--cp-text-muted)">No debts tracked yet.</div>';
+  document.getElementById('debts-list').innerHTML=debts.map(d=>{const rem=d.principal-d.paid;const pct=d.principal>0?Math.max(0,Math.min(100,Math.round(d.paid/d.principal*100))):0;const ml=d.emi>0?Math.ceil(rem/d.emi):0;return'<div class="debt-card"><div class="debt-header"><span class="debt-name">'+esc(d.name||'Untitled debt')+'</span><span class="debt-type" style="background:'+(typeColors[d.type]||'#6b7280')+'20;color:'+(typeColors[d.type]||'#6b7280')+'">'+esc(typeLabels[d.type]||d.type)+'</span></div><div class="progress-bar" style="height:8px;margin:8px 0"><div class="progress-fill" style="width:'+pct+'%;background:var(--cp-success)"></div></div><div style="font-size:.6875rem;color:var(--cp-text-muted)">'+pct+'% paid \u2014 '+fmt(d.paid)+' / '+fmt(d.principal)+'</div><div class="debt-stats"><div class="debt-stat"><div class="debt-stat-label">Remaining</div><div class="debt-stat-value" style="color:var(--cp-danger)">'+fmt(rem)+'</div></div><div class="debt-stat"><div class="debt-stat-label">EMI</div><div class="debt-stat-value">'+fmt(d.emi)+'</div></div><div class="debt-stat"><div class="debt-stat-label">Rate</div><div class="debt-stat-value">'+d.rate+'%</div></div><div class="debt-stat"><div class="debt-stat-label">Months Left</div><div class="debt-stat-value">'+ml+'</div></div></div><div style="margin-top:10px;display:flex;gap:6px"><button class="btn btn-sm btn-primary" onclick="payDebt(\''+d.id+'\')">\u{1F4B0} Pay EMI</button><button class="btn btn-sm" onclick="editDebt(\''+d.id+'\')">\u270F\uFE0F Edit</button><button class="btn btn-sm" onclick="deleteDebt(\''+d.id+'\')" style="color:var(--cp-danger)">Remove</button></div></div>'}).join('')||'<div class="card" style="text-align:center;padding:40px;color:var(--cp-text-muted)">No debts tracked yet.</div>';
 }
 
 function renderSplit(){
   const splits=data.splits||[];let youOwe=0,owedToYou=0;
+  // Normalise members once so a malformed row (bad sync / import) can't NaN the totals or crash the page.
+  splits.forEach(s=>{s.members=toArray(s.members).map(m=>(m&&typeof m==='object')?Object.assign({},m,{name:String(m.name==null?'?':m.name),share:Number(m.share)||0}):{name:String(m==null?'?':m),share:0,settled:false})});
   const balances={};
   // Calculate net balances supporting multi-payer
   splits.forEach(s=>{
@@ -1355,14 +1661,14 @@ function renderSplit(){
   // Friends summary
   const avatarColors=['#6366f1','#ef4444','#f59e0b','#10b981','#8b5cf6','#ec4899','#14b8a6','#f97316'];
   const friends=Object.entries(balances).filter(e=>e[1]!==0).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
-  document.getElementById('split-friends-summary').innerHTML=friends.length?'<div class="card" style="padding:12px"><div style="font-size:.75rem;font-weight:700;margin-bottom:8px;color:var(--cp-text-muted)">FRIEND BALANCES</div>'+friends.map((f,i)=>{const color=avatarColors[i%avatarColors.length];const initial=f[0].charAt(0).toUpperCase();const amt=f[1];return'<div class="split-member"><div class="split-member-info"><div class="split-avatar" style="background:'+color+'">'+initial+'</div><div class="split-member-name">'+f[0]+'</div></div><div class="split-amount" style="color:'+(amt>0?'var(--cp-success)':'var(--cp-danger)')+'">'+(amt>0?'owes you ':'you owe ')+fmt(Math.abs(amt))+'</div></div>'}).join('')+'</div>':'';
+  document.getElementById('split-friends-summary').innerHTML=friends.length?'<div class="card" style="padding:12px"><div style="font-size:.75rem;font-weight:700;margin-bottom:8px;color:var(--cp-text-muted)">FRIEND BALANCES</div>'+friends.map((f,i)=>{const color=avatarColors[i%avatarColors.length];const initial=(String(f[0]).charAt(0)||'?').toUpperCase();const amt=f[1];return'<div class="split-member"><div class="split-member-info"><div class="split-avatar" style="background:'+color+'">'+esc(initial)+'</div><div class="split-member-name">'+esc(String(f[0]))+'</div></div><div class="split-amount" style="color:'+(amt>0?'var(--cp-success)':'var(--cp-danger)')+'">'+(amt>0?'owes you ':'you owe ')+fmt(Math.abs(amt))+'</div></div>'}).join('')+'</div>':'';
   // Split cards
   document.getElementById('splits-list').innerHTML=splits.map(s=>{
     const payers=s.payers||[{name:s.paidBy,amount:s.total}];
     const settledCount=s.members.filter(m=>(m.settled!==undefined?m.settled:m.paid)||((payers.find(p=>p.name===m.name)||{}).amount||0)>=m.share).length;
     const total=s.members.length;const allDone=settledCount===total;
-    const payerNames=payers.filter(p=>p.amount>0).map(p=>p.name+(payers.length>1?' ('+fmt(p.amount)+')':'')).join(', ');
-    return'<div class="split-card" style="'+(allDone?'opacity:.6':'')+'">'+'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;font-size:.875rem">'+s.title+'</span>'+(allDone?'<span style="font-size:.5625rem;padding:2px 6px;border-radius:6px;background:var(--cp-success);color:#fff">SETTLED</span>':'')+'</div><span style="font-size:.6875rem;color:var(--cp-text-muted)">'+fmt(s.total)+'</span></div>'+'<div style="font-size:.625rem;color:var(--cp-text-soft);margin-bottom:8px">Paid by <strong>'+payerNames+'</strong> \u2022 '+settledCount+'/'+total+' settled</div>'+'<div>'+s.members.map((m,mi)=>{const color=avatarColors[mi%avatarColors.length];const initial=m.name.charAt(0).toUpperCase();const memberPaid=(payers.find(p=>p.name===m.name)||{}).amount||0;const isSettled=m.settled!==undefined?m.settled:m.paid;const owes=m.share-memberPaid;const isSquare=isSettled||owes<=0;return'<div class="split-member"><div class="split-member-info"><div class="split-avatar" style="background:'+color+';width:24px;height:24px;font-size:.5625rem">'+initial+'</div><span class="split-member-name">'+m.name+(memberPaid>0?' \u{1F4B3}':'')+'</span></div><div style="display:flex;align-items:center;gap:6px">'+(isSquare?'<span class="split-settled">\u2713 '+(memberPaid>0?'Paid '+fmt(memberPaid):'Settled')+'</span>':'<span class="split-owes">owes '+fmt(owes)+'</span>')+((!isSquare&&m.name!=='You')?'<button class="btn btn-sm" onclick="settleSplit('+s.id+',\''+m.name.replace(/'/g,"\\'")+'\')\" style="background:var(--cp-success);color:#fff;padding:2px 8px;font-size:.5625rem">Settle</button>':'')+'</div></div>'}).join('')+'</div>'+'<div style="margin-top:10px;display:flex;gap:6px;border-top:1px solid var(--cp-border);padding-top:8px"><button class="btn btn-sm" onclick="editSplit(\''+s.id+'\')">\u270F\uFE0F Edit</button><button class="btn btn-sm" onclick="deleteSplit(\''+s.id+'\')" style="color:var(--cp-danger)">\u2715 Delete</button></div></div>'}).join('')||'<div class="card" style="text-align:center;padding:40px;color:var(--cp-text-muted)">\u{1F91D} No splits yet. Add one to start tracking!</div>';
+    const payerNames=payers.filter(p=>p.amount>0).map(p=>esc(String(p.name==null?'?':p.name))+(payers.length>1?' ('+fmt(p.amount)+')':'')).join(', ');
+    return'<div class="split-card" style="'+(allDone?'opacity:.6':'')+'">'+'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;font-size:.875rem">'+esc(s.title||'Untitled')+'</span>'+(allDone?'<span style="font-size:.5625rem;padding:2px 6px;border-radius:6px;background:var(--cp-success);color:#fff">SETTLED</span>':'')+'</div><span style="font-size:.6875rem;color:var(--cp-text-muted)">'+fmt(s.total)+'</span></div>'+'<div style="font-size:.625rem;color:var(--cp-text-soft);margin-bottom:8px">Paid by <strong>'+payerNames+'</strong> \u2022 '+settledCount+'/'+total+' settled</div>'+'<div>'+s.members.map((m,mi)=>{const color=avatarColors[mi%avatarColors.length];const mname=String(m.name==null?'?':m.name);const initial=(mname.charAt(0)||'?').toUpperCase();const memberPaid=(payers.find(p=>p.name===mname)||{}).amount||0;const isSettled=m.settled!==undefined?m.settled:m.paid;const owes=(Number(m.share)||0)-memberPaid;const isSquare=isSettled||owes<=0;return'<div class="split-member"><div class="split-member-info"><div class="split-avatar" style="background:'+color+';width:24px;height:24px;font-size:.5625rem">'+esc(initial)+'</div><span class="split-member-name">'+esc(mname)+(memberPaid>0?' \u{1F4B3}':'')+'</span></div><div style="display:flex;align-items:center;gap:6px">'+(isSquare?'<span class="split-settled">\u2713 '+(memberPaid>0?'Paid '+fmt(memberPaid):'Settled')+'</span>':'<span class="split-owes">owes '+fmt(owes)+'</span>')+((!isSquare&&mname!=='You')?'<button class="btn btn-sm" onclick="settleSplit('+s.id+',\''+mname.replace(/'/g,"\\'")+'\')\" style="background:var(--cp-success);color:#fff;padding:2px 8px;font-size:.5625rem">Settle</button>':'')+'</div></div>'}).join('')+'</div>'+'<div style="margin-top:10px;display:flex;gap:6px;border-top:1px solid var(--cp-border);padding-top:8px"><button class="btn btn-sm" onclick="editSplit(\''+s.id+'\')">\u270F\uFE0F Edit</button><button class="btn btn-sm" onclick="deleteSplit(\''+s.id+'\')" style="color:var(--cp-danger)">\u2715 Delete</button></div></div>'}).join('')||'<div class="card" style="text-align:center;padding:40px;color:var(--cp-text-muted)">\u{1F91D} No splits yet. Add one to start tracking!</div>';
 }
 
 function renderRecurring(){
@@ -1592,7 +1898,7 @@ function saveGoal(){
   const t=parseFloat(document.getElementById('goal-target').value);
   const d=document.getElementById('goal-date').value;
   const p=document.getElementById('goal-priority').value;
-  if(!n||!t||t<=0||!d){alert('Please fill in a name, a target above zero, and a target date.');return}
+  if(!n||!t||t<=0||!d){toast('A goal needs a name, a target above zero, and a target date.','warn');return}
   if(eid){
     const g=data.goals.find(x=>String(x.id)===String(eid));
     if(!g)return;
