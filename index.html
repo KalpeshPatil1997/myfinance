@@ -189,6 +189,37 @@ tr:hover td{background:var(--cp-accent-soft)}
 .page{display:none}.page.active{display:block}
 .mobile-toggle{display:none;position:fixed;top:12px;right:12px;z-index:200;background:var(--cp-surface);border:1px solid var(--cp-border);border-radius:.625rem;padding:8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}.mobile-overlay.active{display:block}
+.imp-head{font-size:.6875rem;color:var(--cp-text);margin-bottom:6px}
+.imp-note{font-size:.625rem;color:var(--cp-text-soft);background:var(--cp-surface-soft);border-radius:8px;padding:7px 9px;margin-bottom:8px;line-height:1.5}
+.imp-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.imp-chip{font-size:.5625rem;padding:3px 8px;border-radius:999px;border:1px solid var(--cp-border);background:var(--cp-surface-soft);color:var(--cp-text-soft);white-space:nowrap}
+.imp-chip-i{margin-right:3px}
+.imp-bulk{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.imp-wrap{max-height:300px;overflow:auto;border:1px solid var(--cp-border);border-radius:10px}
+.imp-row{display:grid;grid-template-columns:20px 62px minmax(0,1fr) 92px 128px 84px 24px;gap:6px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--cp-border);font-size:.625rem}
+.imp-row:last-child{border-bottom:none}
+.imp-off{opacity:.4}
+.imp-chk{width:14px;height:14px;accent-color:var(--cp-accent);cursor:pointer}
+.imp-date{color:var(--cp-text-muted);white-space:nowrap}
+.imp-merch{color:var(--cp-text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imp-dupe{font-size:.5rem;font-weight:500;color:var(--cp-warning);border:1px solid var(--cp-warning);border-radius:5px;padding:1px 4px;margin-left:5px;white-space:nowrap}
+.imp-src{font-size:.5rem;font-weight:500;color:var(--cp-text-soft);border:1px solid var(--cp-border);border-radius:5px;padding:1px 4px;margin-left:5px;white-space:nowrap}
+.imp-more{font-size:.625rem;color:var(--cp-text-soft);text-align:center;padding:8px 4px;line-height:1.6}
+.imp-quick{background:var(--cp-surface-soft);border:1px solid var(--cp-border);border-radius:10px;padding:9px;margin-bottom:9px}
+.imp-quick-h{font-size:.625rem;font-weight:700;color:var(--cp-text);margin-bottom:7px;letter-spacing:.02em}
+.imp-quick-row{display:grid;grid-template-columns:1fr auto 104px;gap:7px;align-items:center;padding:4px 0}
+.imp-quick-n{font-size:.6875rem;font-weight:600;color:var(--cp-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imp-quick-v{font-size:.5625rem;color:var(--cp-text-soft);white-space:nowrap}
+.imp-quick-more{font-size:.5625rem;color:var(--cp-text-soft);padding-top:6px}
+.imp-sel{width:100%;padding:3px 5px;border:1px solid var(--cp-border);border-radius:6px;background:var(--cp-bg);color:var(--cp-text);font-size:.5625rem;font-family:inherit}
+.imp-amt{text-align:right;font-weight:700;white-space:nowrap}
+.imp-x{background:none;border:none;color:var(--cp-text-muted);cursor:pointer;font-size:.6875rem;padding:2px;line-height:1}
+.imp-x:hover{color:var(--cp-danger)}
+@media(max-width:700px){
+.imp-row{grid-template-columns:20px minmax(0,1fr) auto 24px;grid-template-areas:"chk merch amt x" ". type cat cat" ". date date date";row-gap:5px}
+.imp-chk{grid-area:chk}.imp-merch{grid-area:merch}.imp-amt{grid-area:amt}.imp-x{grid-area:x}
+.imp-date{grid-area:date}.imp-row .imp-sel:nth-of-type(1){grid-area:type}.imp-row .imp-sel:nth-of-type(2){grid-area:cat}
+}
 .more-toggle{display:none}
 @media(max-width:768px){.sidebar{transform:translateX(-100%);width:260px}.sidebar.open{transform:translateX(0)}.main{margin-left:0;padding:16px;padding-top:56px;width:100%}.two-col{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.mobile-toggle{display:flex!important}
 .more-toggle{display:flex;width:100%;align-items:center;gap:8px;background:var(--cp-surface);border:1px solid var(--cp-border);color:var(--cp-text-soft);border-radius:.75rem;padding:12px 14px;font-size:.75rem;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:14px}
@@ -336,7 +367,7 @@ tr:hover td{background:var(--cp-accent-soft)}
     </div>
 
     <div class="page" id="page-transactions">
-      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Transactions</h1><p>All income & expenses</p></div><button class="btn btn-primary" onclick="openModal('transaction')">+ Add</button></div>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Transactions</h1><p>All income &amp; expenses</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="openModal('data')">&#128229; Import statement</button><button class="btn btn-primary" onclick="openModal('transaction')">+ Add</button></div></div>
       <div class="quick-bar"><input type="text" class="quick-input" id="quick-entry-tx" placeholder='Quick: "uber 250" or paste bank SMS' onkeydown="if(event.key===&apos;Enter&apos;)quickAddFromTx()"><button class="btn btn-primary btn-sm" onclick="quickAddFromTx()">&#9889;</button></div>
       <div class="chip-row" id="merchant-chips"></div>
       <div class="card" style="margin-bottom:16px;padding:12px"><div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="search-tx" placeholder="Search..." style="flex:1;min-width:140px;padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" oninput="renderTransactions()"><select id="tx-period-select" class="period-select" onchange="renderTransactions()"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="3-months">Last 3 Months</option><option value="6-months">Last 6 Months</option><option value="this-year">This Year</option><option value="all">All Time</option></select><select id="filter-type" style="padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" onchange="renderTransactions()"><option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option><option value="transfer">Transfer</option></select><select id="filter-category" style="padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" onchange="renderTransactions()"><option value="all">All Categories</option></select></div></div>
@@ -439,19 +470,24 @@ tr:hover td{background:var(--cp-accent-soft)}
       <button class="btn btn-primary" onclick="exportData()">&#128229; Full backup (JSON)</button>
       <button class="btn" onclick="exportCSV()">&#128202; Transactions (CSV)</button>
     </div>
-    <div class="form-group"><label>Import a file</label><input type="file" id="import-file" accept=".json,.csv,.txt" onchange="onImportPicked()" style="padding:6px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem"></div>
+    <div class="form-group"><label>Import a file</label><input type="file" id="import-file" accept=".json,.csv,.txt,.pdf" onchange="onImportPicked()" style="padding:6px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem">
+      <div style="font-size:.625rem;color:var(--cp-text-soft);margin-top:5px">CSV from your bank, or a <b>Google Pay PDF statement</b> &#8212; we read it and sort the categories out for you.</div></div>
     <div id="csv-map" style="display:none">
       <div style="font-size:.6875rem;color:var(--cp-text-soft);margin-bottom:8px" id="csv-detected"></div>
-      <div class="form-row">
-        <div class="form-group"><label>Date column</label><select id="csv-col-date"></select></div>
-        <div class="form-group"><label>Description column</label><select id="csv-col-desc"></select></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Amount column</label><select id="csv-col-amount"></select></div>
-        <div class="form-group"><label>Credit column (optional)</label><select id="csv-col-credit"></select></div>
+      <div id="csv-cols">
+        <div class="form-row">
+          <div class="form-group"><label>Date column</label><select id="csv-col-date"></select></div>
+          <div class="form-group"><label>Description column</label><select id="csv-col-desc"></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Amount column</label><select id="csv-col-amount"></select></div>
+          <div class="form-group"><label>Credit column (optional)</label><select id="csv-col-credit"></select></div>
+        </div>
+        <div class="form-group"><label>A positive amount means</label><select id="csv-sign"><option value="auto">Detect automatically</option><option value="pos-in">Money in &#8212; Google Pay, wallets (+500 = received)</option><option value="pos-out">Money out &#8212; bank debit column (500 = spent)</option></select></div>
       </div>
       <div class="form-group"><label>Import into account</label><select id="csv-account"></select></div>
-      <div id="csv-preview" style="font-size:.625rem;color:var(--cp-text-soft);line-height:1.6;max-height:120px;overflow:auto;border:1px solid var(--cp-border);border-radius:8px;padding:8px;margin-bottom:10px"></div>
+      <div id="csv-acctmap" style="display:none"></div>
+      <div id="csv-preview" style="font-size:.6875rem;color:var(--cp-text-soft);margin-bottom:10px"></div>
     </div>
     <div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button><button class="btn btn-primary" id="import-btn" onclick="importData()">&#128228; Import</button></div>
   </div>
@@ -532,9 +568,99 @@ const categories=[
   {id:'other',name:'Other',icon:'\u{1F4CB}',color:'#6b7280'},
 ];
 
-const categoryKeywords={food:['swiggy','zomato','grocery','restaurant','dmart','bigbasket','food','lunch','dinner','breakfast','cafe','coffee','tea'],transport:['uber','ola','rapido','metro','fuel','petrol','diesel','parking','toll'],shopping:['amazon','flipkart','myntra','mall','clothes'],bills:['electricity','water','gas','wifi','internet','recharge','phone'],health:['gym','medicine','doctor','hospital','pharmacy','apollo'],entertainment:['netflix','spotify','movie','theatre','game','hotstar'],education:['course','book','udemy','exam','tuition'],rent:['rent','maintenance','society'],investment:['sip','mutual fund','stocks','fd','ppf','nps'],salary:['salary','pay'],freelance:['freelance','project','client','consulting']};
+// Keyword table tuned against a real 6-month Google Pay statement, so the long tail of Indian
+// merchants (RATNADEEP, Blinkit, TSSPDCL, DU Pump, KIMS...) lands in the right bucket first time.
+// Matched against a space-stripped copy too, because PDF text extraction often glues words together.
+const categoryKeywords={
+  food:['swiggy','zomato','grocery','restaurant','dmart','bigbasket','food','lunch','dinner','breakfast','cafe','coffee','tea','ratnadeep','blinkit','zepto','instamart','dunzo','hungerbox','eatgood','teatime','bakery','bakers','sweets','mithai','kitchen','biryani','dhaba','pizza','dominos','burger','chai','supermart','bazaar','freshtohome','licious','spencer','reliancefresh','dairy','hotel','icecream','gourmet','kirana','mart'],
+  transport:['uber','ola','rapido','metro','fuel','petro','diesel','parking','toll','pump','fillingstation','servicestation','servicecenter','automobile','irctc','indianoil','hpcl','bpcl','redbus','abhibus','railway','fastag','yatri'],
+  shopping:['amazon','flipkart','myntra','mall','clothes','ajio','nykaa','meesho','decathlon','ikea','croma','reliancedigital','jockey','raymond','giva','jewellers','jewellery','pixkart','tanishq','lifestyle','pantaloons','westside','snapdeal','tatacliq','gardenstore','nursery'],
+  bills:['electricity','water','gas','wifi','internet','recharge','phone','powerdistribution','southernpower','tsspdcl','tsnpdcl','bescom','torrentpower','tatapower','adanielectricity','airtel','jio','vodafone','bsnl','broadband','hathway','insurance','acko','policybazaar','dth','tatasky','postpaid','prepaid','fibernet'],
+  health:['gym','medicine','doctor','hospital','pharmacy','apollo','kims','dental','clinic','diagnostic','medplus','netmeds','pharmeasy','healthcare','ayurved','physio','yashoda','fitness','cult'],
+  entertainment:['netflix','spotify','movie','theatre','game','hotstar','bookmyshow','pvr','inox','cinema','jiocinema','sonyliv','zee5','music','playstation'],
+  education:['course','coursera','udemy','exam','tuition','unacademy','byju','school','college','university','institute','academy','textbook','stationery'],
+  rent:['rent','maintenance','society','airbnb','oyo','landlord','lease','hostel','apartment','housing'],
+  investment:['sip','mutual fund','stocks','fd','ppf','nps','zerodha','groww','upstox','angelone','smallcase','kuvera','indmoney','etmoney','icicidirect','sharekhan','5paisa','broking','demat','elss','goldbond'],
+  salary:['salary','payroll','stipend','wages'],
+  freelance:['freelance','consulting','retainer','invoice'],
+  dividends:['dividend'],
+  gift:['gift','donation','charity','temple'],
+};
 
-function detectCategory(desc,type){const d=String(desc||'').toLowerCase();for(const[cat,keys]of Object.entries(categoryKeywords)){if(keys.some(k=>d.includes(k)))return cat}return type==='income'?'salary':'other'}
+// Statement narrations are noisy. "UPI/DR/412345678901/SWIGGY/YESB/98765@ybl" is really just "SWIGGY".
+function cleanMerchant(desc){
+  const orig=String(desc||'').trim();
+  let s=orig;
+  s=s.replace(/^(paid to|payment to|money sent to|sent to|paid|debited for)\s+/i,'');
+  s=s.replace(/^(received from|money received from|credited by|received)\s+/i,'');
+  if(/^UPI[\/\-]/i.test(s)){
+    const parts=s.split('/').slice(1).filter(p=>/[a-z]{3,}/i.test(p)&&!/^(DR|CR|P2A|P2M|PAY|NA)$/i.test(p)&&!/@/.test(p));
+    if(parts.length)s=parts[0];
+  }
+  s=s.replace(/^POS\s+[\dX*]{4,}\s+/i,'');
+  s=s.replace(/^(NEFT|IMPS|RTGS|ACH|ATM|ECS)[\s\/\-]*(DR|CR|D-|C-|P2A|P2M)?[\s\/\-]*/i,'');
+  s=s.replace(/\b[\w.\-]+@[a-z]{2,}\b/gi,' ');
+  s=s.replace(/\b\d{6,}\b/g,' ');
+  s=s.replace(/[\/\\_|]+/g,' ').replace(/\s{2,}/g,' ').trim();
+  s=s.replace(/[\s\-]+$/,'').trim();
+  return s||orig;
+}
+// "Paid to" / "Received from" is an unambiguous direction - trust it over any sign heuristic.
+function detectDirection(desc){
+  const s=String(desc||'').trim();
+  if(/^(paid to|payment to|money sent|sent to|paid|debited)\b/i.test(s))return 'expense';
+  if(/^(received from|money received|credited by|received)\b/i.test(s))return 'income';
+  return null;
+}
+function merchantKey(desc){return normName(cleanMerchant(desc)).slice(0,40)}
+function merchantRules(){
+  if(!data.settings||typeof data.settings!=='object')data.settings={};
+  const m=data.settings.merchantRules;
+  if(!m||typeof m!=='object'||Array.isArray(m))data.settings.merchantRules={};
+  return data.settings.merchantRules;
+}
+function learnMerchant(desc,cat){
+  if(!cat||cat==='transfer')return false;
+  try{const k=merchantKey(desc);if(!k)return false;if(merchantRules()[k]===cat)return false;merchantRules()[k]=cat;return true}catch(e){return false}
+}
+function ruleFor(desc){try{const k=merchantKey(desc);return k?(merchantRules()[k]||null):null}catch(e){return null}}
+function detectCategory(desc,type){
+  const learned=ruleFor(desc);if(learned)return learned;
+  const d=String(desc||'').toLowerCase();
+  // PDF text extraction frequently drops spaces ("PaidtoPeacockPrimeRestaurant"), so test a
+  // space-stripped copy as well. Keywords that contain spaces are stripped the same way.
+  const g=d.replace(/[^a-z0-9]+/g,'');
+  for(const[cat,keys]of Object.entries(categoryKeywords)){
+    if(keys.some(k=>d.includes(k)||g.includes(k.replace(/[^a-z0-9]+/g,''))))return cat;
+  }
+  return type==='income'?'salary':'other';
+}
+// "PaidtoZerodhaBrokingLtd" -> "Zerodha Broking Ltd". PDF extraction glues words together; split on
+// case and digit boundaries so the ledger reads like a name instead of a barcode.
+function deglue(s){
+  let t=String(s||'').replace(/[|_]+/g,' ').replace(/\s{2,}/g,' ').trim();
+  if(!t)return '';
+  t=t.replace(/([a-z0-9])([A-Z])/g,'$1 $2')
+     .replace(/([A-Z]{2,})([A-Z][a-z])/g,'$1 $2')
+     .replace(/([A-Za-z])(\d)/g,'$1 $2')
+     .replace(/(\d)([A-Za-z])/g,'$1 $2');
+  return t.replace(/\s{2,}/g,' ').trim();
+}
+const IMP_BANKS=[['hdfc','HDFC'],['icici','ICICI'],['kotak','Kotak'],['axis','Axis'],['sbi','SBI'],['idfc','IDFC'],['indusind','IndusInd'],['federal','Federal'],['canara','Canara'],['yesbank','YES'],['rbl','RBL'],['pnb','PNB'],['bob','BoB'],['dcb','DCB']];
+// "PaidbyHDFCBankXX31|RuPaycreditcard" -> "HDFC credit card 31". Used to group rows by the account
+// they actually came from, so a credit-card spend never lands on a bank balance.
+function prettyAcct(a){
+  const raw=String(a||'').trim();if(!raw)return '';
+  const k=raw.toLowerCase().replace(/[^a-z0-9]+/g,'');
+  let bank='';
+  for(const b of IMP_BANKS){if(k.indexOf(b[0])>=0){bank=b[1];break}}
+  const nums=k.match(/\d{2,6}/g)||[];
+  const last=nums.length?nums[nums.length-1]:'';
+  const kind=/credit/.test(k)?'credit card':(/debit/.test(k)?'debit card':'');
+  let out=bank?(kind?bank+' '+kind:bank+' Bank'):deglue(raw);
+  if(last)out+=' \u2022'+last;
+  return out.replace(/\s{2,}/g,' ').trim();
+}
 
 function getDefaultData(){return{
   transactions:[
@@ -670,6 +796,14 @@ function sanitizeData(d){
     if(v==null||v===''){d.settings.fire[k]=null;return}
     const n=Number(v);d.settings.fire[k]=isFinite(n)?n:null;
   });
+  // Learned merchant -> category rules. Firebase can hand these back as an array or drop them.
+  const mr=d.settings.merchantRules;
+  if(!mr||typeof mr!=='object'||Array.isArray(mr))d.settings.merchantRules={};
+  else{
+    const valid={};const catIds=categories.map(c=>c.id);
+    Object.keys(mr).forEach(k=>{const v=mr[k];if(typeof v==='string'&&catIds.includes(v)&&String(k).trim())valid[String(k)]=v});
+    d.settings.merchantRules=valid;
+  }
   // Fix nested arrays inside splits (members, payers)
   d.splits.forEach(s=>{s.members=toArray(s.members);if(s.payers)s.payers=toArray(s.payers)});
   // Transactions: normalise every field the balance engine depends on.
@@ -1853,7 +1987,7 @@ function saveTransaction(){
   }
   const rec={date,desc,amount,type,account};
   if(type==='transfer'){rec.toAccount=toAccount;rec.category='transfer'}
-  else{rec.category=category;rec.toAccount=''}
+  else{rec.category=category;rec.toAccount='';learnMerchant(desc,category)}
   if(eid){
     const t=data.transactions.find(x=>String(x.id)===String(eid));
     if(t)Object.assign(t,rec);
@@ -2177,13 +2311,208 @@ function parseAmount(s){
   if(isNaN(v))return NaN;
   return neg?-Math.abs(v):v;
 }
+// === PDF statement import (Google Pay / UPI) ===
+// pdf.js is fetched on demand so the app still starts instantly (and works offline) for everyone
+// who never imports a PDF.
+const PDFJS_CDN='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let _pdfjsPromise=null;
+function ensurePdfJs(){
+  if(window.pdfjsLib){try{window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_CDN+'pdf.worker.min.js'}catch(e){}return Promise.resolve(window.pdfjsLib)}
+  if(_pdfjsPromise)return _pdfjsPromise;
+  _pdfjsPromise=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src=PDFJS_CDN+'pdf.min.js';s.async=true;
+    s.onload=()=>{
+      if(!window.pdfjsLib){_pdfjsPromise=null;reject(new Error('pdfjs-missing'));return}
+      try{window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_CDN+'pdf.worker.min.js'}catch(e){}
+      resolve(window.pdfjsLib);
+    };
+    s.onerror=()=>{_pdfjsPromise=null;reject(new Error('pdfjs-offline'))};
+    document.head.appendChild(s);
+  });
+  return _pdfjsPromise;
+}
+// Rebuild visual lines from positioned glyph runs: group by Y, order by X.
+async function extractPdfText(file,onProgress){
+  const lib=await ensurePdfJs();
+  const buf=await file.arrayBuffer();
+  const doc=await lib.getDocument({data:new Uint8Array(buf)}).promise;
+  const pages=[];
+  for(let p=1;p<=doc.numPages;p++){
+    const page=await doc.getPage(p);
+    const tc=await page.getTextContent();
+    const lines={};
+    (tc.items||[]).forEach(it=>{
+      const tr=it.transform||[];
+      const y=Math.round(Number(tr[5])||0);
+      (lines[y]=lines[y]||[]).push({x:Number(tr[4])||0,s:String(it.str||'')});
+    });
+    const ys=Object.keys(lines).map(Number).sort((a,b)=>b-a);
+    pages.push(ys.map(y=>lines[y].sort((a,b)=>a.x-b.x).map(i=>i.s).join('')).join('\n'));
+    if(page.cleanup)page.cleanup();
+    if(onProgress)onProgress(p,doc.numPages);
+    if(p%5===0)await new Promise(r=>setTimeout(r,0));
+  }
+  try{doc.destroy()}catch(e){}
+  return pages.join('\n');
+}
+// "ICICI Bank 4101" as a counterparty means money moved between the user's own pockets.
+function looksLikeOwnAccount(name){
+  return /^[A-Za-z][A-Za-z ]{1,16}\s*Bank\s*[\dX\u2022*]{2,8}$/i.test(String(name||'').trim());
+}
+// Repeating page furniture. Dropped before we look for transactions - note the statement-period
+// line both starts with a date AND carries rupee totals, so it would otherwise look like a row.
+function isChromeLine(l){
+  return /^Note\s*:/i.test(l)
+    ||/^received\.?\s*Any\s*payments/i.test(l)
+    ||/^Page\s*\d+\s*of\s*\d+$/i.test(l)
+    ||/^Transaction\s*statement/i.test(l)
+    ||/^Date\s*&\s*time/i.test(l)
+    ||/^\d{6,}\s*,/.test(l)
+    ||/^(Sent|Received)$/i.test(l)
+    ||/^\d{1,2}\s*[A-Za-z]{3,9}\s*,?\s*\d{4}\s*[-\u2013\u2014]\s*\d{1,2}\s*[A-Za-z]{3,9}\s*,?\s*\d{4}/.test(l);
+}
+const GPAY_DATE_START=/^(\d{1,2})\s*([A-Za-z]{3,9})\s*,?\s*(20\d{2})(?!\d)/;
+const GPAY_VERB=/(Self\s*transfer\s*(?:to|from)?|Received\s*from|Money\s*received\s*from|Refund\s*from|Paid\s*to|Money\s*sent\s*to|Sent\s*to)\s*/i;
+const GPAY_AMT=/(?:\u20b9|Rs\.?|INR)\s*([\d,]+(?:\.\d{1,2})?)/;
+// One transaction spans several lines, but the line order depends on the PDF reader: pdf.js groups
+// by visual row ("04 Feb, 2026Paid to X\u20b9150" / "11:47 PMUPI ID: ..." / "Paid by ICICI 4101"),
+// while a stream reader emits date, time, party, ref, account, amount separately. Parsing a whole
+// block instead of a fixed line order handles both, and any spacing in between.
+function parseGPayBlock(block){
+  const joined=(block||[]).join('\n');
+  const dm=joined.match(GPAY_DATE_START);
+  if(!dm)return null;
+  const date=parseAnyDate(dm[1]+' '+dm[2].slice(0,3)+' '+dm[3]);
+  if(!date)return null;
+  // A real row always names a counterparty. This is what keeps summary lines out of the ledger.
+  const vm=joined.match(GPAY_VERB);
+  if(!vm)return null;
+  const am=joined.match(GPAY_AMT);
+  if(!am)return null;
+  const amount=parseFloat(String(am[1]).replace(/,/g,''));
+  if(!isFinite(amount)||amount<=0)return null;
+  let party=joined.slice(vm.index+vm[0].length).split('\n')[0];
+  party=party.split(/\u20b9/)[0].split(/\b(?:Rs\.?|INR)\s*[\d,]/)[0].split(/UPI\s*(?:Transaction|Ref)/i)[0];
+  party=deglue(party);
+  if(!party)return null;
+  let type=/^self/i.test(vm[1])?'transfer':(/received|refund/i.test(vm[1])?'income':'expense');
+  if(type!=='transfer'&&looksLikeOwnAccount(party))type='transfer';
+  // Digits first: fully glued text would let "ID:118290062732PaidbyHDFC" swallow the account.
+  let um=joined.match(/UPI\s*(?:Transaction\s*)?(?:ID|Ref(?:erence)?(?:\s*No\.?)?)\s*:?\s*(\d+)/i);
+  if(!um)um=joined.match(/UPI\s*(?:Transaction\s*)?(?:ID|Ref(?:erence)?(?:\s*No\.?)?)\s*:?\s*([A-Za-z0-9]+)/i);
+  const tail=um?joined.slice(um.index+um[0].length):'';
+  const acm=tail.match(/(?:Paid|Credited|Debited|Received)\s*(?:by|to|from|in)\s*([^\n\u20b9]+)/i);
+  const acct=acm?acm[1].trim():'';
+  return {date,desc:party,raw:party,amount,type,srcAcct:prettyAcct(acct),ref:um?um[1]:'',category:importCategoryFor(party,type)};
+}
+// A UPI receipt from a friend is not a salary credit. Only say salary when the text says so.
+function importCategoryFor(desc,type){
+  if(type==='transfer')return 'other';
+  const learned=ruleFor(desc);if(learned)return learned;
+  const c=detectCategory(desc,type);
+  if(type==='income'&&c==='salary'&&!/salary|payroll|stipend|wages/i.test(String(desc||'')))return 'other';
+  return c;
+}
+function parseGPayPdf(text){
+  const lines=String(text==null?'':text).split(/\r?\n/).map(l=>l.trim()).filter(l=>l&&!isChromeLine(l));
+  const starts=[];
+  lines.forEach((l,i)=>{if(GPAY_DATE_START.test(l))starts.push(i)});
+  const rows=[];
+  for(let s=0;s<starts.length;s++){
+    const from=starts[s];
+    const to=Math.min(s+1<starts.length?starts[s+1]:lines.length,from+8);
+    const r=parseGPayBlock(lines.slice(from,to));
+    if(r)rows.push(r);
+  }
+  return rows;
+}
+let _impIsPdf=false,_impSkipped=0,_impAccts=[],_impLimit=150;
+function buildAcctMap(rows){
+  const m={};
+  rows.forEach(r=>{const k=r.srcAcct||'';if(k)m[k]=(m[k]||0)+1});
+  _impAccts=Object.keys(m).map(k=>({key:k,count:m[k]})).sort((a,b)=>b.count-a.count);
+}
+function guessAccountFor(label){
+  const k=normName(label).replace(/\s+/g,'');
+  if(!k)return '';
+  const accs=toArray(data.accounts);
+  let best='';
+  for(const a of accs){
+    const n=normName(a.name).replace(/\s+/g,'');
+    if(n&&(k.indexOf(n)>=0||n.indexOf(k)>=0)){return String(a.id)}
+  }
+  const bank=(k.match(/hdfc|icici|axis|sbi|kotak|idfc|indusind|federal|canara|dcb|rbl|pnb/)||[])[0];
+  const wantsCard=/creditcard/.test(k);
+  for(const a of accs){
+    const n=normName(a.name).replace(/\s+/g,'');
+    const isCard=/credit|card/.test(n)||a.type==='credit';
+    if(bank&&n.indexOf(bank)>=0&&isCard===wantsCard)return String(a.id);
+    if(bank&&n.indexOf(bank)>=0&&!best)best=String(a.id);
+  }
+  return best;
+}
+function renderAcctMap(){
+  const box=document.getElementById('csv-acctmap');if(!box)return;
+  if(_impAccts.length<2){box.style.display='none';box.innerHTML='';return}
+  box.style.display='block';
+  box.innerHTML='<label style="display:block;margin-bottom:4px">Which of your accounts is which?</label>'+
+    '<div style="font-size:.625rem;color:var(--cp-text-soft);margin-bottom:8px">This statement mixes '+_impAccts.length+' funding sources. Map them so a credit-card spend never lands on a bank balance.</div>'+
+    _impAccts.map((a,i)=>'<div class="form-row" style="align-items:center;margin-bottom:6px">'+
+      '<div style="flex:1;font-size:.6875rem;color:var(--cp-text);min-width:0"><b>'+esc(a.key)+'</b><span style="color:var(--cp-text-soft)"> \u00B7 '+a.count+' row'+(a.count===1?'':'s')+'</span></div>'+
+      '<div class="form-group" style="margin:0;flex:1"><select id="impacct-'+i+'"></select></div></div>').join('');
+  const fallback=(document.getElementById('csv-account')||{}).value||'';
+  _impAccts.forEach((a,i)=>{
+    const el=document.getElementById('impacct-'+i);if(!el)return;
+    populateAccountSelect('impacct-'+i);
+    el.value=guessAccountFor(a.key)||fallback;
+  });
+}
+async function onImportPdf(f){
+  const map=document.getElementById('csv-map');
+  const det=document.getElementById('csv-detected');
+  const cols=document.getElementById('csv-cols');if(cols)cols.style.display='none';
+  map.style.display='block';
+  document.getElementById('csv-preview').innerHTML='';
+  det.innerHTML='\u23F3 Opening <b>'+esc(f.name)+'</b>\u2026';
+  try{
+    const text=await extractPdfText(f,(p,n)=>{det.innerHTML='\u23F3 Reading page <b>'+p+'</b> of '+n+'\u2026'});
+    const rows=parseGPayPdf(text);
+    if(!rows.length){
+      det.innerHTML='';map.style.display='none';
+      toast('No transactions found in that PDF. If it\u2019s password protected, remove the password first.','err');
+      return;
+    }
+    _impSkipped=rows.filter(r=>r.type==='transfer').length;
+    const usable=rows.filter(r=>r.type!=='transfer');
+    _impRows=usable.map(r=>{const dup=isDuplicateTx(r);return Object.assign({},r,{keep:!dup,dupe:dup})});
+    buildAcctMap(_impRows);
+    populateAccountSelect('csv-account');
+    const d=defaultAccountId();if(d)document.getElementById('csv-account').value=d;
+    renderAcctMap();
+    const dates=_impRows.map(r=>r.date).filter(Boolean).sort();
+    det.innerHTML='Read <b>'+rows.length+'</b> transactions from <b>'+esc(f.name)+'</b>'+
+      (dates.length?' \u00B7 '+fmtDate(dates[0])+' \u2192 '+fmtDate(dates[dates.length-1]):'')+
+      (_impSkipped?' \u00B7 <span style="color:var(--cp-warning)">'+_impSkipped+' self-transfer'+(_impSkipped===1?'':'s')+' left out</span>':'');
+    renderImportReview();
+  }catch(err){
+    det.innerHTML='';map.style.display='none';
+    const off=/offline|missing/.test(String((err&&err.message)||''));
+    toast(off?'Reading PDFs needs internet the first time. Check your connection and try again.':'Couldn\u2019t read that PDF.','err');
+  }
+}
 let _csvRows=null;
 function onImportPicked(){
   const f=document.getElementById('import-file').files[0];
   const map=document.getElementById('csv-map');
-  _csvRows=null;map.style.display='none';
+  _csvRows=null;_impRows=[];_impIsPdf=false;_impSkipped=0;_impAccts=[];_impLimit=150;
+  map.style.display='none';
+  const cols=document.getElementById('csv-cols');if(cols)cols.style.display='block';
+  const am=document.getElementById('csv-acctmap');if(am){am.style.display='none';am.innerHTML=''}
+  const sEl=document.getElementById('csv-sign');if(sEl)sEl.value='auto';
   if(!f)return;
   if(/\.json$/i.test(f.name))return;
+  if(/\.pdf$/i.test(f.name)){_impIsPdf=true;onImportPdf(f);return}
   const r=new FileReader();
   r.onload=e=>{
     try{
@@ -2207,10 +2536,23 @@ function onImportPicked(){
       document.getElementById('csv-detected').innerHTML='Found <b>'+(rows.length-1)+'</b> rows and <b>'+hdr.length+'</b> columns. Check the mapping below \u2014 we\u2019ve guessed from the headers.';
       map.style.display='block';
       previewCSV();
-      ['csv-col-date','csv-col-desc','csv-col-amount','csv-col-credit'].forEach(s=>{document.getElementById(s).onchange=previewCSV});
+      ['csv-col-date','csv-col-desc','csv-col-amount','csv-col-credit','csv-sign'].forEach(s=>{document.getElementById(s).onchange=previewCSV});
     }catch(err){toast('Could not read that file.','err')}
   };
   r.readAsText(f);
+}
+// Bank statements put money-out in a positive "Debit" column. Wallets like Google Pay sign the
+// amount instead: +500 means money in. Guessing wrong inverts every row, so detect and expose it.
+function autoSignConvention(ai){
+  if(!_csvRows)return 'pos-out';
+  let signed=0,bankish=0;
+  for(let i=1;i<_csvRows.length;i++){
+    const c=String((_csvRows[i]||[])[ai]||'').trim();
+    if(!c)continue;
+    if(/^[+\u2212\-]/.test(c))signed++;
+    if(/^\(/.test(c)||/\b(dr|cr|debit|credit)\b/i.test(c))bankish++;
+  }
+  return (signed>0&&signed>=bankish)?'pos-in':'pos-out';
 }
 function mapCSVRows(){
   if(!_csvRows)return [];
@@ -2218,12 +2560,15 @@ function mapCSVRows(){
   const si=+document.getElementById('csv-col-desc').value;
   const ai=+document.getElementById('csv-col-amount').value;
   const ci=+document.getElementById('csv-col-credit').value;
+  const sEl=document.getElementById('csv-sign');
+  const sign=(sEl&&sEl.value)||'auto';
+  const posMeans=sign==='auto'?autoSignConvention(ai):sign;
   const out=[];
   for(let i=1;i<_csvRows.length;i++){
     const r=_csvRows[i];
     const date=parseAnyDate(r[di]);
     if(!date)continue;
-    const desc=String(r[si]||'').trim()||'Imported transaction';
+    const raw=String(r[si]||'').trim()||'Imported transaction';
     let amt=parseAmount(r[ai]);
     let type='expense';
     if(ci>=0){
@@ -2233,29 +2578,134 @@ function mapCSVRows(){
       else continue;
     }else{
       if(isNaN(amt)||amt===0)continue;
-      type=amt>0?'expense':'income';
+      type=amt>0?(posMeans==='pos-in'?'income':'expense'):(posMeans==='pos-in'?'expense':'income');
       amt=Math.abs(amt);
     }
-    out.push({date,desc,amount:amt,type,category:detectCategory(desc,type)});
+    // "Paid to X" / "Received from X" is explicit - it beats any sign convention.
+    const dir=detectDirection(raw);
+    if(dir)type=dir;
+    out.push({date,desc:cleanMerchant(raw),raw,amount:amt,type,category:detectCategory(raw,type)});
   }
   return out;
 }
+let _impRows=[];
 function previewCSV(){
-  const rows=mapCSVRows();
+  _impRows=mapCSVRows().map(r=>{const dup=isDuplicateTx(r);return Object.assign({},r,{keep:!dup,dupe:dup})});
+  renderImportReview();
+}
+function catOptions(sel){
+  return categories.map(c=>'<option value="'+esc(c.id)+'"'+(c.id===sel?' selected':'')+'>'+esc(c.icon+' '+c.name)+'</option>').join('');
+}
+function catName(id){const c=categories.find(x=>x.id===id);return (c||{}).name||id||'Other'}
+// The long tail of a UPI statement is people, not merchants - no keyword table can classify
+// "Renuka Ananthakumar". So group what's left by merchant and let one tap fix every row at once.
+function impUnmatched(){
+  const m={};
+  _impRows.forEach((r,i)=>{
+    if(!r.keep||r.category!=='other'||r.type!=='expense')return;
+    const k=merchantKey(r.raw)||String(r.desc||'');
+    if(!m[k])m[k]={desc:r.desc,n:0,v:0,i:i};
+    m[k].n++;m[k].v+=r.amount;
+  });
+  return Object.keys(m).map(k=>m[k]).sort((a,b)=>b.v-a.v);
+}
+function renderImportReview(){
   const box=document.getElementById('csv-preview');
-  if(!rows.length){box.innerHTML='<span style="color:var(--cp-danger)">No usable rows with that mapping. Check the date column.</span>';return}
-  const dupes=rows.filter(isDuplicateTx).length;
-  box.innerHTML='<b>'+rows.length+' rows ready</b>'+(dupes?' \u00B7 <span style="color:var(--cp-warning)">'+dupes+' look like duplicates and will be skipped</span>':'')+'<br>'+
-    rows.slice(0,4).map(r=>fmtDate(r.date)+' \u00B7 '+esc(r.desc.slice(0,32))+' \u00B7 '+(r.type==='income'?'+':'-')+fmt(r.amount)).join('<br>')+
-    (rows.length>4?'<br>\u2026and '+(rows.length-4)+' more':'');
+  if(!box)return;
+  if(!_impRows.length){box.innerHTML='<div class="src-empty" style="text-align:left">'+(_impIsPdf?'No usable transactions in that PDF.':'No usable rows with that mapping. Check the date and amount columns above.')+'</div>';updateImportBtn(0);return}
+  const kept=_impRows.filter(r=>r.keep);
+  // Per-category totals - this is the number that visibly moves when a category is changed.
+  const byCat={};kept.forEach(r=>{if(r.type!=='expense')return;byCat[r.category]=(byCat[r.category]||0)+r.amount});
+  const chips=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(e=>{
+    const c=categories.find(x=>x.id===e[0])||{icon:'\u{1F4CB}',name:e[0],color:'#6b7280'};
+    return '<span class="imp-chip" style="border-color:'+c.color+'"><span class="imp-chip-i">'+c.icon+'</span>'+esc(c.name)+' <b>'+fmt(Math.round(e[1]))+'</b></span>';
+  }).join('');
+  const inc=kept.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const exp=kept.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  const dupes=_impRows.filter(r=>r.dupe).length;
+  const multiAcct=_impAccts.length>1;
+  const unmatched=impUnmatched();
+  const unmatchedVal=unmatched.reduce((s,u)=>s+u.v,0);
+  const uncat=kept.filter(r=>r.category==='other').length;
+  box.innerHTML=
+    '<div class="imp-head"><b>'+kept.length+'</b> of '+_impRows.length+' rows selected \u00B7 '+
+      '<span style="color:var(--cp-success)">+'+fmt(Math.round(inc))+'</span> in \u00B7 '+
+      '<span style="color:var(--cp-danger)">-'+fmt(Math.round(exp))+'</span> out'+
+      (dupes?' \u00B7 <span style="color:var(--cp-warning)">'+dupes+' already in your ledger, unticked</span>':'')+
+    '</div>'+
+    (uncat?'<div class="imp-note">'+uncat+' row'+(uncat===1?'':'s')+' couldn\u2019t be matched. Tag each name once below \u2014 it applies to every row from that name, and I\u2019ll remember it next time.</div>':'')+
+    (unmatched.length?'<div class="imp-quick">'+
+      '<div class="imp-quick-h">Needs a category \u00B7 '+unmatched.length+' name'+(unmatched.length===1?'':'s')+' \u00B7 '+fmt(Math.round(unmatchedVal))+'</div>'+
+      unmatched.slice(0,8).map(u=>'<div class="imp-quick-row">'+
+        '<span class="imp-quick-n" title="'+esc(u.desc)+'">'+esc(u.desc)+'</span>'+
+        '<span class="imp-quick-v">'+fmt(Math.round(u.v))+(u.n>1?' \u00B7 '+u.n+' rows':'')+'</span>'+
+        '<select class="imp-sel" onchange="impSetCat('+u.i+',this.value)">'+catOptions('other')+'</select>'+
+      '</div>').join('')+
+      (unmatched.length>8?'<div class="imp-quick-more">Top 8 shown \u00B7 '+(unmatched.length-8)+' smaller name'+(unmatched.length-8===1?'':'s')+' are in the list below</div>':'')+
+    '</div>':'')+
+    (_impSkipped?'<div class="imp-note">'+_impSkipped+' self-transfer'+(_impSkipped===1?'':'s')+' left out \u2014 moving your own money isn\u2019t income or spending.</div>':'')+
+    (chips?'<div class="imp-chips">'+chips+'</div>':'')+
+    '<div class="imp-bulk"><button type="button" class="btn btn-sm" onclick="impAll(true)">Select all</button>'+
+      '<button type="button" class="btn btn-sm" onclick="impAll(false)">Clear all</button>'+
+      (dupes?'<button type="button" class="btn btn-sm" onclick="impDropDupes()">Untick duplicates</button>':'')+'</div>'+
+    '<div class="imp-wrap">'+_impRows.slice(0,_impLimit).map((r,i)=>
+      '<div class="imp-row'+(r.keep?'':' imp-off')+'">'+
+        '<input type="checkbox" class="imp-chk"'+(r.keep?' checked':'')+' onchange="impToggle('+i+',this.checked)" aria-label="Include this transaction">'+
+        '<span class="imp-date">'+fmtDate(r.date)+'</span>'+
+        '<span class="imp-merch" title="'+esc(r.raw)+(r.srcAcct?' \u00B7 '+esc(r.srcAcct):'')+'">'+esc(r.desc)+
+          (multiAcct&&r.srcAcct?'<span class="imp-src">'+esc(r.srcAcct)+'</span>':'')+
+          (r.dupe?'<span class="imp-dupe">already added</span>':'')+'</span>'+
+        '<select class="imp-sel" onchange="impSetType('+i+',this.value)"><option value="expense"'+(r.type==='expense'?' selected':'')+'>Expense</option><option value="income"'+(r.type==='income'?' selected':'')+'>Income</option></select>'+
+        '<select class="imp-sel" onchange="impSetCat('+i+',this.value)">'+catOptions(r.category)+'</select>'+
+        '<span class="imp-amt" style="color:'+(r.type==='income'?'var(--cp-success)':'var(--cp-danger)')+'">'+(r.type==='income'?'+':'\u2212')+fmt(r.amount)+'</span>'+
+        '<button type="button" class="imp-x" title="Remove this row" onclick="impRemove('+i+')">\u2715</button>'+
+      '</div>').join('')+'</div>'+
+    (_impRows.length>_impLimit?'<div class="imp-more">Showing the first '+_impLimit+' of '+_impRows.length+' \u2014 the rest are still selected and will import. <button type="button" class="btn btn-sm" onclick="impShowAll()">Show all</button></div>':'');
+  updateImportBtn(kept.length);
+}
+function updateImportBtn(n){
+  const b=document.getElementById('import-btn');
+  if(b&&(_csvRows||_impRows.length))b.textContent=n?'\u{1F4E5} Import '+n+' transaction'+(n===1?'':'s'):'\u{1F4E5} Import';
+}
+function impShowAll(){_impLimit=1e9;renderImportReview()}
+function impToggle(i,keep){if(_impRows[i]){_impRows[i].keep=!!keep;renderImportReview()}}
+function impRemove(i){if(i>=0&&i<_impRows.length){_impRows.splice(i,1);renderImportReview()}}
+function impAll(v){_impRows.forEach(r=>r.keep=!!v);renderImportReview()}
+function impDropDupes(){_impRows.forEach(r=>{if(r.dupe)r.keep=false});renderImportReview()}
+function impSetType(i,type){
+  const r=_impRows[i];if(!r)return;
+  r.type=type==='income'?'income':'expense';
+  renderImportReview();
+}
+// Changing one row teaches the rule and applies it to every other row from the same merchant.
+function impSetCat(i,cat){
+  const r=_impRows[i];if(!r)return;
+  r.category=cat;
+  const learned=learnMerchant(r.raw,cat);
+  const k=merchantKey(r.raw);
+  let n=0;
+  _impRows.forEach((x,j)=>{if(j!==i&&merchantKey(x.raw)===k&&x.category!==cat){x.category=cat;n++}});
+  if(learned)saveData();
+  renderImportReview();
+  if(n)toast('Applied to '+(n+1)+' '+r.desc+' rows \u2014 I\u2019ll remember it next time.','ok');
+  else if(learned)toast('Noted: '+r.desc+' is '+catName(cat)+'.','ok');
 }
 function isDuplicateTx(t){
   return toArray(data.transactions).some(x=>x.date===t.date&&Math.abs((Number(x.amount)||0)-t.amount)<0.01&&normName(x.desc)===normName(t.desc));
 }
+// Route each row to the account it actually came from, so credit-card spends never hit a bank balance.
+function acctForRow(r){
+  const fallback=(document.getElementById('csv-account')||{}).value||'';
+  if(_impAccts.length>1&&r&&r.srcAcct){
+    const i=_impAccts.findIndex(a=>a.key===r.srcAcct);
+    if(i>=0){const el=document.getElementById('impacct-'+i);if(el&&el.value)return el.value}
+  }
+  return fallback;
+}
 function importData(){
-  const f=document.getElementById('import-file').files[0];
-  if(!f){toast('Pick a file first.','err');return}
-  if(/\.json$/i.test(f.name)){
+  const fi=document.getElementById('import-file');
+  const f=fi&&fi.files?fi.files[0]:null;
+  if(f&&/\.json$/i.test(f.name)){
     const r=new FileReader();
     r.onload=e=>{
       try{
@@ -2268,18 +2718,18 @@ function importData(){
     };
     r.readAsText(f);return;
   }
-  const rows=mapCSVRows();
-  if(!rows.length){toast('Nothing importable with the current mapping.','err');return}
-  const acc=document.getElementById('csv-account').value;
-  const fresh=rows.filter(r=>!isDuplicateTx(r));
-  const skipped=rows.length-fresh.length;
-  if(!fresh.length){toast('All '+rows.length+' rows are already in your ledger.','err');return}
-  const added=fresh.map(r=>Object.assign({id:uid(),account:acc},r));
+  // Key off the reviewed rows, not the file input - some mobile browsers drop the file selection
+  // while the review screen is still open.
+  if(!_impRows.length){toast(f?'Nothing to import from that file.':'Pick a file first.','err');return}
+  const rows=_impRows.filter(r=>r.keep);
+  if(!rows.length){toast('Nothing ticked to import.','err');return}
+  const added=rows.map(r=>({id:uid(),account:acctForRow(r),date:r.date,desc:r.desc,amount:r.amount,type:r.type,category:r.category,toAccount:''}));
+  const dropped=_impRows.length-rows.length;
   const before=data.transactions.slice();
   data.transactions=added.concat(toArray(data.transactions));
   data.transactions.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   recalcBalances();saveData();closeModal();renderPage(getCurrentPage());
-  toastUndo('Imported '+added.length+' transaction'+(added.length===1?'':'s')+(skipped?' \u00B7 skipped '+skipped+' duplicate'+(skipped===1?'':'s'):''),
+  toastUndo('Imported '+added.length+' transaction'+(added.length===1?'':'s')+(dropped?' \u00B7 left out '+dropped:''),
     ()=>{data.transactions=before;recalcBalances();saveData();renderPage(getCurrentPage())});
 }
 
