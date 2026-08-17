@@ -211,6 +211,14 @@ tr:hover td{background:var(--cp-accent-soft)}
 .imp-quick-n{font-size:.6875rem;font-weight:600;color:var(--cp-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .imp-quick-v{font-size:.5625rem;color:var(--cp-text-soft);white-space:nowrap}
 .imp-quick-more{font-size:.5625rem;color:var(--cp-text-soft);padding-top:6px}
+.imp-roll-row{display:grid;grid-template-columns:1fr auto auto;gap:7px;align-items:center;padding:4px 0;font-size:.625rem}
+.imp-roll-n{font-weight:600;color:var(--cp-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imp-roll-v{color:var(--cp-text-soft);white-space:nowrap}
+.imp-roll-tag{font-size:.5rem;font-weight:600;border-radius:5px;padding:1px 5px;white-space:nowrap;border:1px solid}
+.imp-keep{display:flex;gap:7px;align-items:flex-start;background:var(--cp-surface-soft);border:1px solid var(--cp-border);border-radius:10px;padding:9px;margin-bottom:9px;cursor:pointer}
+.imp-keep input{width:14px;height:14px;accent-color:var(--cp-accent);margin-top:1px;flex:none;cursor:pointer}
+.imp-keep-t{font-size:.625rem;font-weight:700;color:var(--cp-text)}
+.imp-keep-s{font-size:.5625rem;color:var(--cp-text-soft);line-height:1.55;margin-top:2px}
 .imp-sel{width:100%;padding:3px 5px;border:1px solid var(--cp-border);border-radius:6px;background:var(--cp-bg);color:var(--cp-text);font-size:.5625rem;font-family:inherit}
 .imp-amt{text-align:right;font-weight:700;white-space:nowrap}
 .imp-x{background:none;border:none;color:var(--cp-text-muted);cursor:pointer;font-size:.6875rem;padding:2px;line-height:1}
@@ -2427,7 +2435,7 @@ function parseGPayPdf(text){
   }
   return rows;
 }
-let _impIsPdf=false,_impSkipped=0,_impAccts=[],_impLimit=150;
+let _impIsPdf=false,_impSkipped=0,_impAccts=[],_impLimit=150,_impKeepBalances=true;
 function buildAcctMap(rows){
   const m={};
   rows.forEach(r=>{const k=r.srcAcct||'';if(k)m[k]=(m[k]||0)+1});
@@ -2505,7 +2513,7 @@ let _csvRows=null;
 function onImportPicked(){
   const f=document.getElementById('import-file').files[0];
   const map=document.getElementById('csv-map');
-  _csvRows=null;_impRows=[];_impIsPdf=false;_impSkipped=0;_impAccts=[];_impLimit=150;
+  _csvRows=null;_impRows=[];_impIsPdf=false;_impSkipped=0;_impAccts=[];_impLimit=150;_impKeepBalances=true;
   map.style.display='none';
   const cols=document.getElementById('csv-cols');if(cols)cols.style.display='block';
   const am=document.getElementById('csv-acctmap');if(am){am.style.display='none';am.innerHTML=''}
@@ -2609,6 +2617,43 @@ function impUnmatched(){
   });
   return Object.keys(m).map(k=>m[k]).sort((a,b)=>b.v-a.v);
 }
+// A statement spanning Feb-Jul is six months of spending, not one. Every per-month figure we
+// quote has to be divided by the months the file actually covers or the budgets we suggest
+// would be six times too big.
+function impMonthSpan(rows){
+  const m={};rows.forEach(r=>{if(r.date)m[String(r.date).slice(0,7)]=1});
+  return Math.max(1,Object.keys(m).length);
+}
+// What this statement implies for each budget category, per month.
+function impBudgetRollup(rows){
+  const months=impMonthSpan(rows);
+  const by={};
+  rows.forEach(r=>{if(r.type!=='expense')return;by[r.category]=(by[r.category]||0)+r.amount});
+  const budgets=toArray(data.budgets);
+  return Object.keys(by).map(cat=>{
+    const b=budgets.find(x=>String(x.category)===String(cat));
+    return {cat,total:by[cat],perMonth:by[cat]/months,limit:b?(Number(b.limit)||0):null,months};
+  }).sort((a,b)=>b.perMonth-a.perMonth);
+}
+// Round to something a human would actually type as a budget.
+function roundBudget(n){
+  if(n<=0)return 0;
+  if(n<1000)return Math.ceil(n/50)*50;
+  if(n<10000)return Math.ceil(n/100)*100;
+  return Math.ceil(n/500)*500;
+}
+function impMakeBudgets(){
+  const rows=_impRows.filter(r=>r.keep&&r.type==='expense');
+  if(!rows.length)return;
+  const missing=impBudgetRollup(rows).filter(r=>r.limit===null&&r.perMonth>0);
+  if(!missing.length){toast('Every category in this file already has a budget.','ok');return}
+  const before=toArray(data.budgets).slice();
+  missing.forEach(r=>{data.budgets.push({category:r.cat,limit:roundBudget(r.perMonth)})});
+  saveData();renderImportReview();
+  toastUndo('Added '+missing.length+' budget'+(missing.length===1?'':'s')+' from your real spending',
+    ()=>{data.budgets=before;saveData();renderImportReview()});
+}
+function impSetKeepBalances(v){_impKeepBalances=!!v}
 function renderImportReview(){
   const box=document.getElementById('csv-preview');
   if(!box)return;
@@ -2627,7 +2672,13 @@ function renderImportReview(){
   const unmatched=impUnmatched();
   const unmatchedVal=unmatched.reduce((s,u)=>s+u.v,0);
   const uncat=kept.filter(r=>r.category==='other').length;
+  const roll=impBudgetRollup(kept.filter(r=>r.type==='expense'));
+  const rollMonths=roll.length?roll[0].months:1;
+  const noBudget=roll.filter(r=>r.limit===null&&r.perMonth>0).length;
   box.innerHTML=
+    '<label class="imp-keep"><input type="checkbox"'+(_impKeepBalances?' checked':'')+' onchange="impSetKeepBalances(this.checked)">'+
+      '<span><span class="imp-keep-t">Don\u2019t change my account balances</span>'+
+      '<span class="imp-keep-s">This money already left your account \u2014 the balance you typed in is what\u2019s left <i>after</i> it. Ticked, we file the history for budgets and trends without subtracting it a second time. Untick only if the balance you entered was from before this statement.</span></span></label>'+
     '<div class="imp-head"><b>'+kept.length+'</b> of '+_impRows.length+' rows selected \u00B7 '+
       '<span style="color:var(--cp-success)">+'+fmt(Math.round(inc))+'</span> in \u00B7 '+
       '<span style="color:var(--cp-danger)">-'+fmt(Math.round(exp))+'</span> out'+
@@ -2644,6 +2695,21 @@ function renderImportReview(){
       (unmatched.length>8?'<div class="imp-quick-more">Top 8 shown \u00B7 '+(unmatched.length-8)+' smaller name'+(unmatched.length-8===1?'':'s')+' are in the list below</div>':'')+
     '</div>':'')+
     (_impSkipped?'<div class="imp-note">'+_impSkipped+' self-transfer'+(_impSkipped===1?'':'s')+' left out \u2014 moving your own money isn\u2019t income or spending.</div>':'')+
+    (roll.length?'<div class="imp-quick">'+
+      '<div class="imp-quick-h">Budget roll-up \u00B7 '+rollMonths+' month'+(rollMonths===1?'':'s')+' of real spending</div>'+
+      roll.slice(0,7).map(r=>{
+        const c=categories.find(x=>x.id===r.cat)||{icon:'\u{1F4CB}',name:r.cat};
+        const over=r.limit!==null&&r.perMonth>r.limit;
+        const tag=r.limit===null
+          ?'<span class="imp-roll-tag" style="color:var(--cp-text-soft);border-color:var(--cp-border)">no budget</span>'
+          :(over?'<span class="imp-roll-tag" style="color:var(--cp-danger);border-color:var(--cp-danger)">over by '+fmt(Math.round(r.perMonth-r.limit))+'</span>'
+                :'<span class="imp-roll-tag" style="color:var(--cp-success);border-color:var(--cp-success)">within '+fmt(r.limit)+'</span>');
+        return '<div class="imp-roll-row"><span class="imp-roll-n">'+(c.icon||'')+' '+esc(c.name)+'</span>'+
+          '<span class="imp-roll-v">'+fmt(Math.round(r.perMonth))+'/mo</span>'+tag+'</div>';
+      }).join('')+
+      (roll.length>7?'<div class="imp-quick-more">+'+(roll.length-7)+' smaller categor'+(roll.length-7===1?'y':'ies')+'</div>':'')+
+      (noBudget?'<div style="margin-top:8px"><button type="button" class="btn btn-sm" onclick="impMakeBudgets()">Set '+noBudget+' budget'+(noBudget===1?'':'s')+' from this</button></div>':'')+
+    '</div>':'')+
     (chips?'<div class="imp-chips">'+chips+'</div>':'')+
     '<div class="imp-bulk"><button type="button" class="btn btn-sm" onclick="impAll(true)">Select all</button>'+
       '<button type="button" class="btn btn-sm" onclick="impAll(false)">Clear all</button>'+
@@ -2726,11 +2792,25 @@ function importData(){
   const added=rows.map(r=>({id:uid(),account:acctForRow(r),date:r.date,desc:r.desc,amount:r.amount,type:r.type,category:r.category,toAccount:''}));
   const dropped=_impRows.length-rows.length;
   const before=data.transactions.slice();
+  // Openings are rewritten below, so undo has to put them back too or the balance stays anchored.
+  const openBefore={};toArray(data.accounts).forEach(a=>{openBefore[a.id]=Number(a.opening)||0});
+  // A statement records money that has ALREADY moved - the balance the user typed in is what
+  // survived it. Subtracting six months of spending from that would invent a loss they never
+  // took and drag net worth, runway and FIRE down with it. Re-anchor each touched account's
+  // opening so today's balance lands exactly where it started; the history still counts for
+  // budgets, trends and insights.
+  const anchor={};
+  if(_impKeepBalances){
+    const touched={};added.forEach(t=>{if(t.account)touched[t.account]=1});
+    toArray(data.accounts).forEach(a=>{if(touched[a.id])anchor[a.id]=Number(a.balance)||0});
+  }
   data.transactions=added.concat(toArray(data.transactions));
   data.transactions.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  toArray(data.accounts).forEach(a=>{if(anchor[a.id]!==undefined)a.opening=anchor[a.id]-txNet(a.id)});
   recalcBalances();saveData();closeModal();renderPage(getCurrentPage());
-  toastUndo('Imported '+added.length+' transaction'+(added.length===1?'':'s')+(dropped?' \u00B7 left out '+dropped:''),
-    ()=>{data.transactions=before;recalcBalances();saveData();renderPage(getCurrentPage())});
+  const anchored=Object.keys(anchor).length;
+  toastUndo('Imported '+added.length+' transaction'+(added.length===1?'':'s')+(dropped?' \u00B7 left out '+dropped:'')+(anchored?' \u00B7 balances unchanged':''),
+    ()=>{data.transactions=before;toArray(data.accounts).forEach(a=>{if(openBefore[a.id]!==undefined)a.opening=openBefore[a.id]});recalcBalances();saveData();renderPage(getCurrentPage())});
 }
 
 // === Firebase Cloud Sync ===
