@@ -1541,8 +1541,13 @@ function renderTransactions(){
   const f=shownTransactions();
   const tot=toArray(data.transactions).length;
   const bar=document.getElementById('tx-bulk');
-  if(bar)bar.innerHTML=f.length?'<span class="tx-bulk-n">Showing <b>'+f.length+'</b> of '+tot+'</span>'+
-    '<button class="btn btn-sm" style="color:var(--cp-danger);border-color:var(--cp-danger)" onclick="deleteShownTransactions()">\u2715 Delete all '+f.length+' shown</button>':'';
+  if(bar){
+    if(f.length)bar.innerHTML='<span class="tx-bulk-n">Showing <b>'+f.length+'</b> of '+tot+'</span>'+
+      '<button class="btn btn-sm" style="color:var(--cp-danger);border-color:var(--cp-danger)" onclick="deleteShownTransactions()">\u2715 Delete all '+f.length+' shown</button>';
+    else if(tot)bar.innerHTML='<span class="tx-bulk-n">Nothing matches these filters, but you have <b>'+tot+'</b> transactions.</span>'+
+      '<button class="btn btn-sm" onclick="showAllTransactions()">Show all '+tot+'</button>';
+    else bar.innerHTML='';
+  }
   document.getElementById('all-transactions').innerHTML=f.map(t=>
     '<tr><td>'+fmtDate(t.date)+'</td>'+
     '<td>'+txIcon(t)+' '+esc(t.desc||'')+'</td>'+
@@ -2099,19 +2104,28 @@ function deleteImportBatch(id){
   toastUndo('Removed '+doomed.length+' imported transaction'+(doomed.length===1?'':'s')+(b&&b.anchored?' \u00B7 balances unchanged':''),
     ()=>{data.imports=impBefore;restoreTransactions(snap);renderImportHistory()});
 }
+function showAllTransactions(){
+  navigateTo('transactions');
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v};
+  set('search-tx','');set('tx-period-select','all');set('filter-type','all');set('filter-category','all');
+  renderTransactions();
+}
 function renderImportHistory(){
   const box=document.getElementById('import-history');
   if(!box)return;
   const counts={};toArray(data.transactions).forEach(t=>{if(t.imp)counts[t.imp]=(counts[t.imp]||0)+1});
   const list=toArray(data.imports).filter(b=>counts[b.id]).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
-  if(!list.length){box.innerHTML='';return}
+  const manual='<div class="imp-hist-f">Imports made before this update aren\u2019t listed here. To clear those, open <b>Transactions</b>, then use <b>Delete all shown</b> \u2014 your search and filters decide what goes.'+
+    '<div style="margin-top:8px"><button type="button" class="btn btn-sm" onclick="closeModal();showAllTransactions()">Go to Transactions</button></div></div>';
+  if(!list.length){box.innerHTML='<div class="imp-hist-h">Imported statements</div>'+
+    '<div class="imp-hist-f" style="margin-top:0">Nothing tracked yet \u2014 statements you import from now on get listed here with a one-tap Remove.</div>'+manual;return}
   box.innerHTML='<div class="imp-hist-h">Imported statements</div>'+
     list.map(b=>'<div class="imp-hist-row">'+
       '<span class="imp-hist-n" title="'+esc(b.label)+'">'+esc(b.label)+
         '<span class="imp-hist-s">'+counts[b.id]+' transaction'+(counts[b.id]===1?'':'s')+(b.at?' \u00B7 '+fmtDate(b.at):'')+'</span></span>'+
       '<button type="button" class="btn btn-sm" style="color:var(--cp-danger);border-color:var(--cp-danger)" onclick="deleteImportBatch(\''+esc(b.id)+'\')">Remove</button>'+
     '</div>').join('')+
-    '<div class="imp-hist-f">Removing an import takes out every row it added and puts your balances back exactly as they were.</div>';
+    '<div class="imp-hist-f">Removing an import takes out every row it added and puts your balances back exactly as they were.</div>'+manual;
 }
 function addBudget(){
   const l=parseFloat(document.getElementById('budget-limit').value);
