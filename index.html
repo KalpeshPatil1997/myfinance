@@ -175,7 +175,7 @@ tr:hover td{background:var(--cp-accent-soft)}
 .bud-wrap:last-child{border-bottom:none}
 .bud-wrap .budget-item{border-bottom:none}
 .bud-head{cursor:pointer}
-.bud-caret{flex:0 0 auto;font-size:.625rem;color:var(--cp-text-muted);width:12px;text-align:center}
+.bud-caret{flex:0 0 auto;font-size:.5625rem;font-weight:700;color:var(--cp-accent);background:var(--cp-accent-soft);padding:3px 7px;border-radius:6px;white-space:nowrap}
 .bud-wrap.open{background:var(--cp-surface-soft);border-radius:10px;margin:0 -8px;padding:0 8px}
 .bud-drill{display:none}
 .bud-drill.open{display:block;padding:2px 0 12px}
@@ -188,6 +188,7 @@ tr:hover td{background:var(--cp-accent-soft)}
 .bud-more{font-size:.5625rem;color:var(--cp-text-muted);padding-top:9px}
 .bud-none{font-size:.625rem;color:var(--cp-text-soft);line-height:1.6;padding:10px 0 2px}
 .bud-sec{font-size:.625rem;font-weight:700;color:var(--cp-text);margin:16px 0 2px;padding-top:14px;border-top:1px solid var(--cp-border);letter-spacing:.02em}
+.bud-nudge{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 11px;margin-bottom:10px;border:1px solid var(--cp-warning);border-radius:10px;font-size:.625rem;color:var(--cp-text-soft);line-height:1.5}
 .bud-sec-s{font-size:.5625rem;color:var(--cp-text-soft);font-weight:400;margin-bottom:4px;line-height:1.55}
 .bud-tag{font-size:.5rem;font-weight:700;padding:2px 6px;border-radius:5px;border:1px solid var(--cp-warning);color:var(--cp-warning)}
 .modal-overlay{position:fixed;inset:0;background:var(--cp-overlay);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -422,7 +423,7 @@ tr:hover td{background:var(--cp-accent-soft)}
     </div>
 
     <div class="page" id="page-budgets">
-      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Budgets</h1><p>Monthly limits</p></div><div style="display:flex;gap:8px;align-items:center"><select id="budget-period-select" class="period-select" onchange="renderBudgets()"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="3-months">Last 3 Months</option><option value="6-months">Last 6 Months</option></select><button class="btn btn-sm" id="rollover-toggle" onclick="toggleRollover()" title="Carry unspent budget into next month">Rollover off</button><button class="btn btn-primary" onclick="openModal('budget')">+ Set Budget</button></div></div>
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px"><div><h1>Budgets</h1><p>Monthly limits</p></div><div style="display:flex;gap:8px;align-items:center"><select id="budget-period-select" class="period-select" onchange="renderBudgets()"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="3-months">Last 3 Months</option><option value="6-months">Last 6 Months</option><option value="this-year">This Year</option><option value="all">All Time</option></select><button class="btn btn-sm" id="rollover-toggle" onclick="toggleRollover()" title="Carry unspent budget into next month">Rollover off</button><button class="btn btn-primary" onclick="openModal('budget')">+ Set Budget</button></div></div>
       <div class="stats-grid"><div class="card"><div class="card-title">Total Budget</div><div class="card-value" id="total-budget">&#8377;0</div></div><div class="card"><div class="card-title">Spent</div><div class="card-value" id="total-spent">&#8377;0</div></div><div class="card"><div class="card-title">Remaining</div><div class="card-value" id="total-remaining">&#8377;0</div></div></div>
       <div class="card"><div id="budget-list"></div></div>
     </div>
@@ -1654,6 +1655,28 @@ function toggleBudgetDrill(cat){
 function catOptionsFor(sel){
   return expenseCats().map(c=>'<option value="'+esc(c.id)+'"'+(String(c.id)===String(sel)?' selected':'')+'>'+c.icon+' '+esc(c.name)+'</option>').join('');
 }
+function budgetPeriodNudge(){
+  const el=document.getElementById('budget-period-select');
+  if(!el)return '';
+  const all=toArray(data.transactions).filter(t=>t.type==='expense');
+  if(!all.length)return '';
+  const here=filterByPeriod(all,el.value);
+  if(here.length)return '';
+  const opts=['last-month','3-months','6-months','this-year','all'];
+  // Prefer the narrowest window that reveals *everything*, so one tap is enough.
+  const hit=opts.find(p=>filterByPeriod(all,p).length===all.length)||opts.slice().reverse().find(p=>filterByPeriod(all,p).length);
+  if(!hit)return '';
+  const n=filterByPeriod(all,hit).length;
+  const label={'last-month':'Last Month','3-months':'Last 3 Months','6-months':'Last 6 Months','this-year':'This Year','all':'All Time'}[hit];
+  return '<div class="bud-nudge"><span>No spending recorded in this period, but you have <b>'+n+'</b> expense'+(n===1?'':'s')+' further back.</span>'+
+    '<button class="btn btn-sm" onclick="setBudgetPeriod(\''+hit+'\')">Show '+label+'</button></div>';
+}
+function setBudgetPeriod(p){
+  const el=document.getElementById('budget-period-select');
+  if(el)el.value=p;
+  _budOpen='';
+  renderBudgets();
+}
 function looseCats(){
   const el=document.getElementById('budget-period-select');
   const period=el?el.value:'this-month';
@@ -1693,7 +1716,7 @@ function renderUnbudgeted(byC){
         '<div class="budget-info"><div class="budget-name">'+esc((cat||{}).name||c)+
           (vague?' <span class="bud-tag">needs a look</span>':'')+'</div>'+
         '<div class="budget-spent">'+fmt(byC[c])+(n?' \u00B7 '+n+' item'+(n===1?'':'s'):'')+'</div></div>'+
-        '<span class="bud-caret">'+(open?'\u25BE':'\u25B8')+'</span>'+
+        '<span class="bud-caret">'+(open?'Hide \u25BE':'View \u25B8')+'</span>'+
         '<button class="btn-ghost" onclick="event.stopPropagation();budgetFromCat(\''+esc(c)+'\')" title="Set a budget for this">+</button></div>'+
         '<div class="bud-drill'+(open?' open':'')+'">'+(open?renderBudgetDrill(c):'')+'</div>'+
       '</div>'
@@ -1753,12 +1776,12 @@ function renderBudgets(){
       '</div><div class="budget-spent">'+fmt(sp)+' / '+fmt(scaledLimit)+' \u00B7 '+(left>=0?fmt(left)+' left':fmt(-left)+' over')+
         (n?' \u00B7 '+n+' item'+(n===1?'':'s'):'')+'</div></div>'+
       '<div class="budget-bar"><div class="progress-bar"><div class="progress-fill" style="width:'+p+'%;background:'+col+'"></div></div></div>'+
-      '<span class="bud-caret">'+(open?'\u25BE':'\u25B8')+'</span>'+
+      '<span class="bud-caret">'+(open?'Hide \u25BE':'View \u25B8')+'</span>'+
       '<button class="btn-ghost" onclick="event.stopPropagation();deleteBudget(\''+esc(b.category)+'\')" style="color:var(--cp-danger)">\u2715</button></div>'+
       '<div class="bud-drill'+(open?' open':'')+'">'+(open?renderBudgetDrill(b.category):'')+'</div>'+
     '</div>'
   }).join('')||'<div class="src-empty">No budgets set. Budgets are the single biggest predictor of whether people stick with an app like this \u2014 start with just one.</div>';
-  document.getElementById('budget-list').innerHTML=budgeted+renderUnbudgeted(byC);
+  document.getElementById('budget-list').innerHTML=budgetPeriodNudge()+budgeted+renderUnbudgeted(byC);
   document.getElementById('total-budget').textContent=fmt(tb);
   document.getElementById('total-spent').textContent=fmt(ts);
   document.getElementById('total-remaining').textContent=fmt(Math.max(0,tb-ts));
