@@ -219,6 +219,14 @@ tr:hover td{background:var(--cp-accent-soft)}
 .imp-keep input{width:14px;height:14px;accent-color:var(--cp-accent);margin-top:1px;flex:none;cursor:pointer}
 .imp-keep-t{font-size:.625rem;font-weight:700;color:var(--cp-text)}
 .imp-keep-s{font-size:.5625rem;color:var(--cp-text-soft);line-height:1.55;margin-top:2px}
+.tx-bulk{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.tx-bulk:empty{display:none}
+.tx-bulk-n{font-size:.6875rem;color:var(--cp-text-soft)}
+.imp-hist-h{font-size:.625rem;font-weight:700;color:var(--cp-text);margin:14px 0 7px;letter-spacing:.02em}
+.imp-hist-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 9px;border:1px solid var(--cp-border);border-radius:9px;margin-bottom:6px;background:var(--cp-surface-soft)}
+.imp-hist-n{font-size:.6875rem;font-weight:600;color:var(--cp-text);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.imp-hist-s{font-size:.5625rem;font-weight:500;color:var(--cp-text-soft);margin-top:1px}
+.imp-hist-f{font-size:.5625rem;color:var(--cp-text-soft);line-height:1.55}
 .imp-sel{width:100%;padding:3px 5px;border:1px solid var(--cp-border);border-radius:6px;background:var(--cp-bg);color:var(--cp-text);font-size:.5625rem;font-family:inherit}
 .imp-amt{text-align:right;font-weight:700;white-space:nowrap}
 .imp-x{background:none;border:none;color:var(--cp-text-muted);cursor:pointer;font-size:.6875rem;padding:2px;line-height:1}
@@ -379,6 +387,7 @@ tr:hover td{background:var(--cp-accent-soft)}
       <div class="quick-bar"><input type="text" class="quick-input" id="quick-entry-tx" placeholder='Quick: "uber 250" or paste bank SMS' onkeydown="if(event.key===&apos;Enter&apos;)quickAddFromTx()"><button class="btn btn-primary btn-sm" onclick="quickAddFromTx()">&#9889;</button></div>
       <div class="chip-row" id="merchant-chips"></div>
       <div class="card" style="margin-bottom:16px;padding:12px"><div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="search-tx" placeholder="Search..." style="flex:1;min-width:140px;padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" oninput="renderTransactions()"><select id="tx-period-select" class="period-select" onchange="renderTransactions()"><option value="this-month">This Month</option><option value="last-month">Last Month</option><option value="3-months">Last 3 Months</option><option value="6-months">Last 6 Months</option><option value="this-year">This Year</option><option value="all">All Time</option></select><select id="filter-type" style="padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" onchange="renderTransactions()"><option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option><option value="transfer">Transfer</option></select><select id="filter-category" style="padding:7px 10px;border:1px solid var(--cp-border);border-radius:.625rem;background:var(--cp-bg);color:var(--cp-text);font-size:.75rem" onchange="renderTransactions()"><option value="all">All Categories</option></select></div></div>
+      <div class="tx-bulk" id="tx-bulk"></div>
       <div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Account</th><th>Type</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="all-transactions"></tbody></table></div></div>
     </div>
 
@@ -497,6 +506,7 @@ tr:hover td{background:var(--cp-accent-soft)}
       <div id="csv-acctmap" style="display:none"></div>
       <div id="csv-preview" style="font-size:.6875rem;color:var(--cp-text-soft);margin-bottom:10px"></div>
     </div>
+    <div id="import-history"></div>
     <div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button><button class="btn btn-primary" id="import-btn" onclick="importData()">&#128228; Import</button></div>
   </div>
   <div class="modal" id="modal-cloud" style="display:none" onclick="event.stopPropagation()"><h2>&#128100; Sign In</h2>
@@ -731,7 +741,7 @@ function getDefaultData(){return{
   netWorthHistory:[520000,545000,560000,578000,595000,610000,632000],
 }}
 
-function getEmptyData(){return{transactions:[],accounts:[],budgets:[],goals:[],recurring:[],debts:[],splits:[],templates:[],settings:{onboarded:false,rollover:false},lastRecurringRun:null,noSpendStreak:0,netWorthHistory:[]}}
+function getEmptyData(){return{transactions:[],accounts:[],budgets:[],goals:[],recurring:[],debts:[],splits:[],templates:[],imports:[],settings:{onboarded:false,rollover:false},lastRecurringRun:null,noSpendStreak:0,netWorthHistory:[]}}
 function toArray(v){if(Array.isArray(v))return v;if(v&&typeof v==='object')return Object.values(v);return[]}
 let _uidSeq=0;
 function uid(){_uidSeq=(_uidSeq+1)%1000000;return Date.now().toString(36)+_uidSeq.toString(36)+Math.random().toString(36).slice(2,6)}
@@ -793,6 +803,11 @@ function sanitizeData(d){
   d.transactions=toArray(d.transactions);d.accounts=toArray(d.accounts);d.budgets=toArray(d.budgets);
   d.goals=toArray(d.goals);d.recurring=toArray(d.recurring);d.debts=toArray(d.debts);
   d.splits=toArray(d.splits);d.templates=toArray(d.templates);d.netWorthHistory=toArray(d.netWorthHistory);
+  // Import batches, so a whole statement can be reversed later instead of row by row.
+  d.imports=toArray(d.imports).filter(b=>b&&b.id).map(b=>({
+    id:String(b.id),at:String(b.at||''),label:String(b.label||'Import'),
+    count:Number(b.count)||0,anchored:!!b.anchored
+  }));
   d.settings=(d.settings&&typeof d.settings==='object')?d.settings:{};
   d.settings.onboarded=!!d.settings.onboarded;
   d.settings.rollover=!!d.settings.rollover;
@@ -1501,13 +1516,33 @@ function txAccountLabel(t){
 function txIcon(t){if(t.type==='transfer')return '\u21C4';const c=categories.find(x=>x.id===t.category);return (c||{}).icon||''}
 function txCatLabel(t){if(t.type==='transfer')return 'Transfer';const c=categories.find(x=>x.id===t.category);return (c||{}).name||t.category||''}
 
-function renderTransactions(){
+function shownTransactions(){
   const s=(document.getElementById('search-tx').value||'').toLowerCase(),tf=document.getElementById('filter-type').value,cf=document.getElementById('filter-category').value;
   const period=document.getElementById('tx-period-select').value;
   let f=filterByPeriod(data.transactions,period);
   if(s)f=f.filter(t=>(t.desc||'').toLowerCase().includes(s));
   if(tf!=='all')f=f.filter(t=>t.type===tf);
   if(cf!=='all')f=f.filter(t=>t.category===cf);
+  return f;
+}
+// Deleting a bad import one row at a time is punishing. Whatever the filters are showing is a
+// selection, so let it be deleted as one.
+function deleteShownTransactions(){
+  const doomed=shownTransactions();
+  if(!doomed.length){toast('Nothing to delete in this view.','err');return}
+  const imported=doomed.filter(t=>t.imp).length;
+  if(!confirm('Delete all '+doomed.length+' transaction'+(doomed.length===1?'':'s')+' shown?\n\nThis is everything matching the filters above, not just the visible rows.'))return;
+  const snap=removeTransactions(doomed);
+  saveData();renderPage(getCurrentPage());
+  toastUndo('Deleted '+doomed.length+' transaction'+(doomed.length===1?'':'s')+(imported&&snap.held?' \u00B7 balances unchanged':''),
+    ()=>restoreTransactions(snap));
+}
+function renderTransactions(){
+  const f=shownTransactions();
+  const tot=toArray(data.transactions).length;
+  const bar=document.getElementById('tx-bulk');
+  if(bar)bar.innerHTML=f.length?'<span class="tx-bulk-n">Showing <b>'+f.length+'</b> of '+tot+'</span>'+
+    '<button class="btn btn-sm" style="color:var(--cp-danger);border-color:var(--cp-danger)" onclick="deleteShownTransactions()">\u2715 Delete all '+f.length+' shown</button>':'';
   document.getElementById('all-transactions').innerHTML=f.map(t=>
     '<tr><td>'+fmtDate(t.date)+'</td>'+
     '<td>'+txIcon(t)+' '+esc(t.desc||'')+'</td>'+
@@ -2025,8 +2060,60 @@ function deleteTransaction(id){
   recalcBalances();saveData();renderPage(getCurrentPage());
   toastUndo('Transaction deleted',()=>{data.transactions.splice(i,0,removed);recalcBalances();saveData();renderPage(getCurrentPage())});
 }
+// Rows imported with balance-protection on had their account's opening rewritten to absorb them.
+// Deleting them without unwinding that leaves the adjustment behind and the balance drifts by the
+// batch total - so remove the rows and hand the opening back in one operation.
+function anchoredIds(){
+  const m={};toArray(data.imports).forEach(b=>{if(b.anchored)m[b.id]=1});return m;
+}
+function removeTransactions(doomed){
+  if(!doomed.length)return null;
+  const kill={};doomed.forEach(t=>{kill[String(t.id)]=1});
+  const anch=anchoredIds();
+  const held=doomed.filter(t=>t.imp&&anch[t.imp]);
+  const before=data.transactions.slice();
+  const openBefore={};toArray(data.accounts).forEach(a=>{openBefore[a.id]=Number(a.opening)||0});
+  data.transactions=toArray(data.transactions).filter(t=>!kill[String(t.id)]);
+  toArray(data.accounts).forEach(a=>{const adj=txNetIn(held,a.id);if(adj)a.opening=(Number(a.opening)||0)+adj});
+  recalcBalances();
+  return {before,openBefore,held:held.length};
+}
+function restoreTransactions(snap){
+  if(!snap)return;
+  data.transactions=snap.before;
+  toArray(data.accounts).forEach(a=>{if(snap.openBefore[a.id]!==undefined)a.opening=snap.openBefore[a.id]});
+  recalcBalances();saveData();renderPage(getCurrentPage());
+}
+function deleteImportBatch(id){
+  const b=toArray(data.imports).find(x=>String(x.id)===String(id));
+  const doomed=toArray(data.transactions).filter(t=>String(t.imp)===String(id));
+  if(!doomed.length){
+    data.imports=toArray(data.imports).filter(x=>String(x.id)!==String(id));
+    saveData();renderImportHistory();toast('Those rows were already gone.','ok');return;
+  }
+  if(!confirm('Remove all '+doomed.length+' transaction'+(doomed.length===1?'':'s')+' from this import?'))return;
+  const snap=removeTransactions(doomed);
+  const impBefore=toArray(data.imports).slice();
+  data.imports=toArray(data.imports).filter(x=>String(x.id)!==String(id));
+  saveData();renderImportHistory();renderPage(getCurrentPage());
+  toastUndo('Removed '+doomed.length+' imported transaction'+(doomed.length===1?'':'s')+(b&&b.anchored?' \u00B7 balances unchanged':''),
+    ()=>{data.imports=impBefore;restoreTransactions(snap);renderImportHistory()});
+}
+function renderImportHistory(){
+  const box=document.getElementById('import-history');
+  if(!box)return;
+  const counts={};toArray(data.transactions).forEach(t=>{if(t.imp)counts[t.imp]=(counts[t.imp]||0)+1});
+  const list=toArray(data.imports).filter(b=>counts[b.id]).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  if(!list.length){box.innerHTML='';return}
+  box.innerHTML='<div class="imp-hist-h">Imported statements</div>'+
+    list.map(b=>'<div class="imp-hist-row">'+
+      '<span class="imp-hist-n" title="'+esc(b.label)+'">'+esc(b.label)+
+        '<span class="imp-hist-s">'+counts[b.id]+' transaction'+(counts[b.id]===1?'':'s')+(b.at?' \u00B7 '+fmtDate(b.at):'')+'</span></span>'+
+      '<button type="button" class="btn btn-sm" style="color:var(--cp-danger);border-color:var(--cp-danger)" onclick="deleteImportBatch(\''+esc(b.id)+'\')">Remove</button>'+
+    '</div>').join('')+
+    '<div class="imp-hist-f">Removing an import takes out every row it added and puts your balances back exactly as they were.</div>';
+}
 function addBudget(){
-  const c=document.getElementById('budget-category').value;
   const l=parseFloat(document.getElementById('budget-limit').value);
   if(!l||l<=0){alert('Enter a monthly limit greater than zero.');return}
   const e=toArray(data.budgets).find(b=>b.category===c);
@@ -2435,7 +2522,7 @@ function parseGPayPdf(text){
   }
   return rows;
 }
-let _impIsPdf=false,_impSkipped=0,_impAccts=[],_impLimit=150,_impKeepBalances=true;
+let _impIsPdf=false,_impSkipped=0,_impAccts=[],_impLimit=150,_impKeepBalances=true,_impFileName='';
 function buildAcctMap(rows){
   const m={};
   rows.forEach(r=>{const k=r.srcAcct||'';if(k)m[k]=(m[k]||0)+1});
@@ -2513,7 +2600,7 @@ let _csvRows=null;
 function onImportPicked(){
   const f=document.getElementById('import-file').files[0];
   const map=document.getElementById('csv-map');
-  _csvRows=null;_impRows=[];_impIsPdf=false;_impSkipped=0;_impAccts=[];_impLimit=150;_impKeepBalances=true;
+  _csvRows=null;_impRows=[];_impIsPdf=false;_impSkipped=0;_impAccts=[];_impLimit=150;_impKeepBalances=true;_impFileName=f?f.name:'';
   map.style.display='none';
   const cols=document.getElementById('csv-cols');if(cols)cols.style.display='block';
   const am=document.getElementById('csv-acctmap');if(am){am.style.display='none';am.innerHTML=''}
@@ -2789,7 +2876,8 @@ function importData(){
   if(!_impRows.length){toast(f?'Nothing to import from that file.':'Pick a file first.','err');return}
   const rows=_impRows.filter(r=>r.keep);
   if(!rows.length){toast('Nothing ticked to import.','err');return}
-  const added=rows.map(r=>({id:uid(),account:acctForRow(r),date:r.date,desc:r.desc,amount:r.amount,type:r.type,category:r.category,toAccount:''}));
+  const batchId=uid();
+  const added=rows.map(r=>({id:uid(),account:acctForRow(r),date:r.date,desc:r.desc,amount:r.amount,type:r.type,category:r.category,toAccount:'',imp:batchId}));
   const dropped=_impRows.length-rows.length;
   const before=data.transactions.slice();
   // Openings are rewritten below, so undo has to put them back too or the balance stays anchored.
@@ -2807,10 +2895,12 @@ function importData(){
   data.transactions=added.concat(toArray(data.transactions));
   data.transactions.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   toArray(data.accounts).forEach(a=>{if(anchor[a.id]!==undefined)a.opening=anchor[a.id]-txNet(a.id)});
+  const anchored=Object.keys(anchor).length>0;
+  const impBefore=toArray(data.imports).slice();
+  data.imports=toArray(data.imports).concat([{id:batchId,at:today(),label:_impFileName||(_impIsPdf?'PDF statement':'Statement'),count:added.length,anchored}]);
   recalcBalances();saveData();closeModal();renderPage(getCurrentPage());
-  const anchored=Object.keys(anchor).length;
   toastUndo('Imported '+added.length+' transaction'+(added.length===1?'':'s')+(dropped?' \u00B7 left out '+dropped:'')+(anchored?' \u00B7 balances unchanged':''),
-    ()=>{data.transactions=before;toArray(data.accounts).forEach(a=>{if(openBefore[a.id]!==undefined)a.opening=openBefore[a.id]});recalcBalances();saveData();renderPage(getCurrentPage())});
+    ()=>{data.imports=impBefore;data.transactions=before;toArray(data.accounts).forEach(a=>{if(openBefore[a.id]!==undefined)a.opening=openBefore[a.id]});recalcBalances();saveData();renderPage(getCurrentPage())});
 }
 
 // === Firebase Cloud Sync ===
@@ -2870,6 +2960,7 @@ function openModal(type){
   else if(type==='source'){populateSourceTypes()}
   else if(type==='cloud'){updateAuthUI()}
   else if(type==='template'){populateCategorySelect('tpl-category');renderTemplateList()}
+  else if(type==='data'){renderImportHistory()}
 }
 function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay'))return;document.getElementById('modal-overlay').classList.remove('active')}
 function populateCategorySelect(id,expOnly){const s=document.getElementById(id);const c=expOnly?categories.filter(x=>!['salary','freelance','investment','dividends'].includes(x.id)):categories;s.innerHTML=c.map(x=>'<option value="'+x.id+'">'+x.icon+' '+x.name+'</option>').join('')}
