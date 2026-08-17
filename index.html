@@ -171,6 +171,25 @@ tr:hover td{background:var(--cp-accent-soft)}
 .budget-icon{width:32px;height:32px;border-radius:.625rem;display:flex;align-items:center;justify-content:center;font-size:.875rem}
 .budget-info{flex:1}.budget-name{font-weight:600;font-size:.75rem}.budget-spent{font-size:.6875rem;color:var(--cp-text-muted)}
 .budget-bar{flex:0 0 100px}
+.bud-wrap{border-bottom:1px solid var(--cp-border)}
+.bud-wrap:last-child{border-bottom:none}
+.bud-wrap .budget-item{border-bottom:none}
+.bud-head{cursor:pointer}
+.bud-caret{flex:0 0 auto;font-size:.625rem;color:var(--cp-text-muted);width:12px;text-align:center}
+.bud-wrap.open{background:var(--cp-surface-soft);border-radius:10px;margin:0 -8px;padding:0 8px}
+.bud-drill{display:none}
+.bud-drill.open{display:block;padding:2px 0 12px}
+.bud-tx{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px 0;border-top:1px dashed var(--cp-border)}
+.bud-tx-d{flex:1;min-width:110px;font-size:.6875rem;color:var(--cp-text);line-height:1.35;word-break:break-word}
+.bud-tx-m{display:block;font-size:.5625rem;color:var(--cp-text-muted);font-weight:400}
+.bud-tx-a{font-size:.6875rem;font-weight:700;white-space:nowrap}
+.bud-tx-sel{flex:1 1 130px;min-width:0;padding:5px 7px;border:1px solid var(--cp-border);border-radius:8px;background:var(--cp-bg);color:var(--cp-text);font-size:.625rem}
+.bud-hint{font-size:.5625rem;color:var(--cp-text-soft);line-height:1.6;padding:9px 0 0}
+.bud-more{font-size:.5625rem;color:var(--cp-text-muted);padding-top:9px}
+.bud-none{font-size:.625rem;color:var(--cp-text-soft);line-height:1.6;padding:10px 0 2px}
+.bud-sec{font-size:.625rem;font-weight:700;color:var(--cp-text);margin:16px 0 2px;padding-top:14px;border-top:1px solid var(--cp-border);letter-spacing:.02em}
+.bud-sec-s{font-size:.5625rem;color:var(--cp-text-soft);font-weight:400;margin-bottom:4px;line-height:1.55}
+.bud-tag{font-size:.5rem;font-weight:700;padding:2px 6px;border-radius:5px;border:1px solid var(--cp-warning);color:var(--cp-warning)}
 .modal-overlay{position:fixed;inset:0;background:var(--cp-overlay);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-overlay.active{opacity:1;pointer-events:all}
 .modal{background:var(--cp-surface);border:1px solid var(--cp-border);border-radius:16px;padding:24px;width:92%;max-width:460px;max-height:85vh;overflow-y:auto;box-shadow:var(--cp-shadow)}
@@ -1616,6 +1635,94 @@ function toggleRollover(){
   saveData();renderBudgets();
   toast(data.settings.rollover?'Rollover on \u2014 unspent budget now carries forward (capped at 3\u00D7 the limit).':'Rollover off \u2014 budgets reset clean every month.','ok');
 }
+let _budOpen='';
+const BUD_CAP=40;
+function expenseCats(){return categories.filter(x=>!['salary','freelance','investment','dividends'].includes(x.id))}
+function acctLabel(id){const a=toArray(data.accounts).find(x=>String(x.id)===String(id));return a?a.name:''}
+function descKey(d){return String(d==null?'':d).toLowerCase().replace(/\s+/g,' ').trim()}
+function budgetTxFor(cat){
+  const el=document.getElementById('budget-period-select');
+  const period=el?el.value:'this-month';
+  return filterByPeriod(toArray(data.transactions),period)
+    .filter(t=>t.type==='expense'&&String(t.category)===String(cat))
+    .sort((a,b)=>(Number(b.amount)||0)-(Number(a.amount)||0));
+}
+function toggleBudgetDrill(cat){
+  _budOpen=(String(_budOpen)===String(cat))?'':String(cat);
+  renderBudgets();
+}
+function catOptionsFor(sel){
+  return expenseCats().map(c=>'<option value="'+esc(c.id)+'"'+(String(c.id)===String(sel)?' selected':'')+'>'+c.icon+' '+esc(c.name)+'</option>').join('');
+}
+function looseCats(){
+  const el=document.getElementById('budget-period-select');
+  const period=el?el.value:'this-month';
+  const byC={};filterByPeriod(toArray(data.transactions),period).filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+(Number(t.amount)||0)});
+  const has={};toArray(data.budgets).forEach(b=>{has[String(b.category)]=1});
+  return Object.keys(byC).filter(c=>!has[String(c)]&&(byC[c]||0)>0).sort((a,b)=>byC[b]-byC[a]);
+}
+function renderBudgetDrill(cat){
+  const tx=budgetTxFor(cat);
+  if(!tx.length)return '<div class="bud-none">Nothing here in this period.'+
+    (looseCats().length?' If you expected something, it is probably filed elsewhere \u2014 check <b>Not in any budget</b> below.':' Try a wider period from the selector above.')+'</div>';
+  const rows=tx.slice(0,BUD_CAP).map(t=>
+    '<div class="bud-tx">'+
+      '<span class="bud-tx-d">'+esc(t.desc||'\u2014')+
+        '<span class="bud-tx-m">'+fmtDate(t.date)+(acctLabel(t.account)?' \u00B7 '+esc(acctLabel(t.account)):'')+(t.imp?' \u00B7 imported':'')+'</span></span>'+
+      '<span class="bud-tx-a">'+fmt(Number(t.amount)||0)+'</span>'+
+      '<select class="bud-tx-sel" onclick="event.stopPropagation()" onchange="recatTx(\''+esc(t.id)+'\',this.value)">'+catOptionsFor(t.category)+'</select>'+
+    '</div>').join('');
+  return rows+
+    (tx.length>BUD_CAP?'<div class="bud-more">Showing the '+BUD_CAP+' largest of '+tx.length+'. The rest are on the Transactions page.</div>':'')+
+    '<div class="bud-hint">Wrongly tagged? Change the category right here. If other transactions share the same name, we\u2019ll offer to move them all in one go.</div>';
+}
+function renderUnbudgeted(byC){
+  const loose=looseCats();
+  if(!loose.length)return '';
+  const total=loose.reduce((s,c)=>s+byC[c],0);
+  return '<div class="bud-sec">Not in any budget \u2014 '+fmt(total)+'</div>'+
+    '<div class="bud-sec-s">Spending that no budget is watching. Miscategorised imports usually land here, so it is worth a look before you trust the numbers above.</div>'+
+    loose.map(c=>{
+      const cat=categories.find(x=>x.id===c);
+      const open=String(_budOpen)===String(c);
+      const n=budgetTxFor(c).length;
+      const vague=(c==='other'||!cat);
+      return '<div class="bud-wrap'+(open?' open':'')+'">'+
+        '<div class="budget-item bud-head" onclick="toggleBudgetDrill(\''+esc(c)+'\')">'+
+        '<div class="budget-icon" style="background:'+(cat?cat.color+'20':'var(--cp-surface-soft)')+'">'+((cat||{}).icon||'\u2753')+'</div>'+
+        '<div class="budget-info"><div class="budget-name">'+esc((cat||{}).name||c)+
+          (vague?' <span class="bud-tag">needs a look</span>':'')+'</div>'+
+        '<div class="budget-spent">'+fmt(byC[c])+(n?' \u00B7 '+n+' item'+(n===1?'':'s'):'')+'</div></div>'+
+        '<span class="bud-caret">'+(open?'\u25BE':'\u25B8')+'</span>'+
+        '<button class="btn-ghost" onclick="event.stopPropagation();budgetFromCat(\''+esc(c)+'\')" title="Set a budget for this">+</button></div>'+
+        '<div class="bud-drill'+(open?' open':'')+'">'+(open?renderBudgetDrill(c):'')+'</div>'+
+      '</div>'
+    }).join('');
+}
+function budgetFromCat(cat){
+  openModal('budget');
+  const s=document.getElementById('budget-category');
+  if(s)s.value=cat;
+  setTimeout(()=>{const s2=document.getElementById('budget-category');if(s2)s2.value=cat},60);
+}
+function recatTx(id,newCat){
+  const list=toArray(data.transactions);
+  const t=list.find(x=>String(x.id)===String(id));
+  if(!t)return;
+  const oldCat=t.category;
+  if(String(oldCat)===String(newCat))return;
+  const key=descKey(t.desc);
+  const sibs=key?list.filter(x=>x!==t&&x.type==='expense'&&descKey(x.desc)===key&&String(x.category)===String(oldCat)):[];
+  const catName=c=>{const f=categories.find(x=>x.id===c);return f?f.name:c};
+  let moved=[{t:t,from:oldCat}];
+  if(sibs.length&&confirm('Also move the other '+sibs.length+' \u201C'+(t.desc||'')+'\u201D transaction'+(sibs.length===1?'':'s')+' to '+catName(newCat)+'?')){
+    sibs.forEach(x=>{moved.push({t:x,from:x.category});x.category=newCat});
+  }
+  t.category=newCat;
+  saveData();renderBudgets();
+  toastUndo(moved.length>1?moved.length+' moved to '+catName(newCat):'Moved to '+catName(newCat),
+    ()=>{moved.forEach(m=>{m.t.category=m.from});saveData();renderBudgets()});
+}
 function renderBudgets(){
   const period=document.getElementById('budget-period-select').value;
   const months=getPeriodMonthCount(period);
@@ -1624,7 +1731,7 @@ function renderBudgets(){
   const isCurrent=period==='this-month';
   const byC={};pTx.filter(t=>t.type==='expense').forEach(t=>{byC[t.category]=(byC[t.category]||0)+(Number(t.amount)||0)});
   let tb=0,ts=0;
-  document.getElementById('budget-list').innerHTML=toArray(data.budgets).map(b=>{
+  const budgeted=toArray(data.budgets).map(b=>{
     const c=categories.find(x=>x.id===b.category);
     const sp=byC[b.category]||0;
     const base=(Number(b.limit)||0)*months;
@@ -1635,14 +1742,23 @@ function renderBudgets(){
     const col=p>90?'var(--cp-danger)':p>70?'var(--cp-warning)':'var(--cp-success)';
     tb+=scaledLimit;ts+=sp;
     const left=scaledLimit-sp;
-    return '<div class="budget-item"><div class="budget-icon" style="background:'+(c?c.color+'20':'var(--cp-surface-soft)')+'">'+((c||{}).icon||'\u{1F4CB}')+'</div>'+
+    const open=String(_budOpen)===String(b.category);
+    const n=(byC[b.category]!==undefined)?budgetTxFor(b.category).length:0;
+    return '<div class="bud-wrap'+(open?' open':'')+'">'+
+      '<div class="budget-item bud-head" onclick="toggleBudgetDrill(\''+esc(b.category)+'\')">'+
+      '<div class="budget-icon" style="background:'+(c?c.color+'20':'var(--cp-surface-soft)')+'">'+((c||{}).icon||'\u{1F4CB}')+'</div>'+
       '<div class="budget-info"><div class="budget-name">'+esc((c||{}).name||b.category)+
         (months>1?' <span style="font-size:.5625rem;color:var(--cp-text-muted)">('+months+'mo)</span>':'')+
         (bonus>0?' <span class="sub-flag flag-idle" title="Carried over from unspent months">+'+fmt(bonus)+' rolled over</span>':'')+
-      '</div><div class="budget-spent">'+fmt(sp)+' / '+fmt(scaledLimit)+' \u00B7 '+(left>=0?fmt(left)+' left':fmt(-left)+' over')+'</div></div>'+
+      '</div><div class="budget-spent">'+fmt(sp)+' / '+fmt(scaledLimit)+' \u00B7 '+(left>=0?fmt(left)+' left':fmt(-left)+' over')+
+        (n?' \u00B7 '+n+' item'+(n===1?'':'s'):'')+'</div></div>'+
       '<div class="budget-bar"><div class="progress-bar"><div class="progress-fill" style="width:'+p+'%;background:'+col+'"></div></div></div>'+
-      '<button class="btn-ghost" onclick="deleteBudget(\''+esc(b.category)+'\')" style="color:var(--cp-danger)">\u2715</button></div>'
+      '<span class="bud-caret">'+(open?'\u25BE':'\u25B8')+'</span>'+
+      '<button class="btn-ghost" onclick="event.stopPropagation();deleteBudget(\''+esc(b.category)+'\')" style="color:var(--cp-danger)">\u2715</button></div>'+
+      '<div class="bud-drill'+(open?' open':'')+'">'+(open?renderBudgetDrill(b.category):'')+'</div>'+
+    '</div>'
   }).join('')||'<div class="src-empty">No budgets set. Budgets are the single biggest predictor of whether people stick with an app like this \u2014 start with just one.</div>';
+  document.getElementById('budget-list').innerHTML=budgeted+renderUnbudgeted(byC);
   document.getElementById('total-budget').textContent=fmt(tb);
   document.getElementById('total-spent').textContent=fmt(ts);
   document.getElementById('total-remaining').textContent=fmt(Math.max(0,tb-ts));
