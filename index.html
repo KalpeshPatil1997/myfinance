@@ -885,6 +885,8 @@ function sanitizeData(d){
 }
 function loadData(){try{const r=localStorage.getItem(STORAGE_KEY);if(r){return sanitizeData(JSON.parse(r))}return sanitizeData(getDefaultData())}catch{return sanitizeData(getDefaultData())}}
 let _skipFirebaseSync=false;
+// Never write to the cloud before we have successfully read it once.
+let _cloudReady=false;
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(_skipFirebaseSync)return;clearTimeout(window._syncT);window._syncT=setTimeout(()=>firebasePush(),2000)}
 let data=loadData();
 
@@ -3076,7 +3078,7 @@ async function firebaseSignIn(){
 function firebaseSignOut(){if(!confirm('Sign out? Data will reset to defaults.'))return;
   // Detach old listener before signing out
   const ref=getDbRef();if(ref)ref.off();
-  firebase.auth().signOut();firebaseUser=null;_firebaseListenerActive=false;_skipFirebaseSync=true;data=sanitizeData(getDefaultData());localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());updateAuthUI()}
+  firebase.auth().signOut();firebaseUser=null;_firebaseListenerActive=false;_cloudReady=false;_skipFirebaseSync=true;data=sanitizeData(getDefaultData());localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());updateAuthUI()}
 function getDbRef(){if(!firebaseUser||!firebaseDb)return null;return firebaseDb.ref('users/'+firebaseUser.uid+'/data')}
 function startFirebaseListener(){
   const ref=getDbRef();if(!ref)return;
@@ -3087,18 +3089,21 @@ function startFirebaseListener(){
   ref.get().then(snap=>{
     const cloud=snap.val();
     if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Synced: '+new Date().toLocaleString()}
-  }).catch(e=>console.warn('Initial pull failed:',e));
+    // Cloud has now been read (empty counts as read) - writes are safe from here.
+    clearTimeout(window._syncT);_cloudReady=true;
+  }).catch(e=>{console.warn('Initial pull failed:',e);const el=document.getElementById('sync-status');if(el){el.textContent='\u26A0 Offline - not syncing';el.style.color='var(--cp-danger)'}});
   // Then attach live listener for future changes
-  ref.on('value',snap=>{const cloud=snap.val();if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}});
+  ref.on('value',snap=>{const cloud=snap.val();if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}_cloudReady=true});
 }
 function firebasePush(){
   const ref=getDbRef();if(!ref)return;
+  if(!_cloudReady){console.warn('Push blocked: cloud not read yet');return}
   const el=document.getElementById('sync-status');el.textContent='\u2B06 Pushing...';el.style.color='';
   ref.set(data).then(()=>{el.textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Pushed: '+new Date().toLocaleString()}).catch(e=>{el.textContent='\u26A0 Push failed';el.style.color='var(--cp-danger)';console.warn(e)});
 }
 function firebasePull(){
   const ref=getDbRef();if(!ref){alert('Not signed in');return}
-  ref.get().then(snap=>{const cloud=snap.val();if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);saveData();_skipFirebaseSync=false;renderPage(getCurrentPage());alert('\u2705 Pulled latest data!')}else alert('No data on cloud yet.')}).catch(e=>alert('Pull error: '+e.message));
+  ref.get().then(snap=>{const cloud=snap.val();if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);_cloudReady=true;saveData();_skipFirebaseSync=false;renderPage(getCurrentPage());alert('\u2705 Pulled latest data!')}else{_cloudReady=true;alert('No data on cloud yet.')}}).catch(e=>alert('Pull error: '+e.message));
 }
 
 function openModal(type){
