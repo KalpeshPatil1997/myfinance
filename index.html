@@ -3080,20 +3080,33 @@ function firebaseSignOut(){if(!confirm('Sign out? Data will reset to defaults.')
   const ref=getDbRef();if(ref)ref.off();
   firebase.auth().signOut();firebaseUser=null;_firebaseListenerActive=false;_cloudReady=false;_skipFirebaseSync=true;data=sanitizeData(getDefaultData());localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());updateAuthUI()}
 function getDbRef(){if(!firebaseUser||!firebaseDb)return null;return firebaseDb.ref('users/'+firebaseUser.uid+'/data')}
+function syncStatus(txt,bad){const el=document.getElementById('sync-status');if(!el)return;el.textContent=txt;el.style.color=bad?'var(--cp-danger)':''}
+// A denied or blocked read can leave the promise unsettled, which used to look
+// identical to a healthy "Connected". Say what is actually happening instead.
+function cloudReadFailed(e){
+  const m=String((e&&(e.code||e.message))||'').toLowerCase();
+  if(m.indexOf('permission')>=0||m.indexOf('denied')>=0)syncStatus('\u26A0 Read denied \u2013 check database rules',true);
+  else syncStatus('\u26A0 Cannot reach cloud \u2013 not syncing',true);
+  console.warn('Cloud read failed:',e);
+}
 function startFirebaseListener(){
-  const ref=getDbRef();if(!ref)return;
+  const ref=getDbRef();if(!ref){syncStatus('\u26A0 Database not initialised',true);return}
   // Always detach old listener, then re-attach
   if(_firebaseListenerActive){ref.off();_firebaseListenerActive=false}
   _firebaseListenerActive=true;
+  syncStatus('\u2601 Reading cloud\u2026');
+  clearTimeout(window._cloudWatch);
+  window._cloudWatch=setTimeout(()=>{if(!_cloudReady)syncStatus('\u26A0 Read timed out \u2013 check database rules',true)},10000);
   // Do an explicit pull first to guarantee data loads
   ref.get().then(snap=>{
     const cloud=snap.val();
     if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Synced: '+new Date().toLocaleString()}
     // Cloud has now been read (empty counts as read) - writes are safe from here.
-    clearTimeout(window._syncT);_cloudReady=true;
-  }).catch(e=>{console.warn('Initial pull failed:',e);const el=document.getElementById('sync-status');if(el){el.textContent='\u26A0 Offline - not syncing';el.style.color='var(--cp-danger)'}});
+    clearTimeout(window._syncT);clearTimeout(window._cloudWatch);_cloudReady=true;
+    if(!cloud)syncStatus('\u2601 Connected \u2013 cloud is empty');
+  }).catch(e=>cloudReadFailed(e));
   // Then attach live listener for future changes
-  ref.on('value',snap=>{const cloud=snap.val();if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}_cloudReady=true});
+  ref.on('value',snap=>{const cloud=snap.val();if(cloud){_skipFirebaseSync=true;data=sanitizeData(cloud);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));_skipFirebaseSync=false;renderPage(getCurrentPage());document.getElementById('sync-status').textContent='\u2601 Synced';document.getElementById('last-sync-time').textContent='Last sync: '+new Date().toLocaleString()}clearTimeout(window._cloudWatch);_cloudReady=true},e=>cloudReadFailed(e));
 }
 function firebasePush(){
   const ref=getDbRef();if(!ref)return;
